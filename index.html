@@ -2,40 +2,61 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ألوان سبورت VIP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ألوان سبورت - مشغل الويب</title>
+    <!-- مكتبة تشغيل تدعم روابط البث المباشر المتقدمة HLS -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background-color: #0b0f19;
             color: #fff;
-            font-family: sans-serif;
+            font-family: Tahoma, sans-serif;
             padding: 15px;
         }
         h1 {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: #00ffcc;
             font-size: 20px;
+        }
+        /* تصميم المشغل الثابت في الأعلى */
+        .player-box {
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto 20px auto;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #30363d;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+        video {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+            display: block;
+            background: #000;
         }
         .channels-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
             gap: 10px;
-            max-width: 800px;
+            max-width: 700px;
             margin: 0 auto;
         }
         .channel-card {
             background: #161b22;
             border: 1px solid #30363d;
             border-radius: 10px;
-            padding: 15px 10px;
+            padding: 12px;
             text-align: center;
             cursor: pointer;
+            transition: 0.2s;
         }
-        .channel-card:active {
-            background: #00ffcc22;
+        .channel-card:hover {
             border-color: #00ffcc;
+            background: #21262d;
         }
         .channel-name {
             font-size: 15px;
@@ -46,64 +67,19 @@
             font-size: 11px;
             color: #ff4757;
         }
-
-        /* مشغل ملء الشاشة الحقيقي */
-        #player-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #000;
-            z-index: 99999;
-        }
-        #video-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        /* أزرار التحكم داخل المشغل */
-        .controls-bar {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            left: 10px;
-            display: flex;
-            justify-content: space-between;
-            z-index: 100000;
-            pointer-events: none;
-        }
-        .btn {
-            pointer-events: auto;
-            background: rgba(0, 0, 0, 0.75);
-            color: #fff;
-            border: 1px solid #00ffcc;
-            padding: 8px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close-btn {
-            border-color: #ff4757;
-            color: #ff4757;
-        }
     </style>
 </head>
 <body>
 
     <h1>قنوات ألوان سبورت VIP</h1>
-    <div class="channels-grid" id="grid">جاري تحميل القنوات...</div>
 
-    <!-- واجهة المشغل بملء الشاشة -->
-    <div id="player-overlay">
-        <div class="controls-bar">
-            <button class="btn close-btn" onclick="closePlayer()">✕ إغلاق</button>
-            <button class="btn" onclick="makeLandscape()">🔄 ملء الشاشة أفقياً</button>
-        </div>
-        <iframe id="video-iframe" src="" allowfullscreen allow="autoplay; fullscreen; picture-in-picture; orientation-lock"></iframe>
+    <!-- مشغل الفيديو الطبيعي لمتصفح كروم -->
+    <div class="player-box">
+        <video id="videoPlayer" controls autoplay playsinline></video>
     </div>
+
+    <!-- شبكة القنوات -->
+    <div class="channels-grid" id="grid">جاري تحميل القنوات...</div>
 
     <script>
         async function loadChannels() {
@@ -113,6 +89,11 @@
                 let grid = document.getElementById('grid');
                 grid.innerHTML = '';
                 
+                // تشغيل أول قناة افتراضياً عند فتح الموقع
+                if(channels.length > 0) {
+                    playChannel(channels[0].url);
+                }
+
                 channels.forEach(ch => {
                     let card = document.createElement('div');
                     card.className = 'channel-card';
@@ -120,57 +101,34 @@
                         <div class="channel-name">${ch.name}</div>
                         <div class="channel-badge">${ch.badge}</div>
                     `;
-                    card.onclick = () => openPlayer(ch.url);
+                    card.onclick = () => playChannel(ch.url);
                     grid.appendChild(card);
                 });
             } catch (e) {
-                document.getElementById('grid').innerHTML = 'خطأ في تحميل الملف';
+                document.getElementById('grid').innerHTML = 'خطأ في تحميل القنوات';
             }
         }
 
-        function openPlayer(url) {
-            let overlay = document.getElementById('player-overlay');
-            let iframe = document.getElementById('video-iframe');
+        function playChannel(url) {
+            var video = document.getElementById('videoPlayer');
             
-            iframe.src = url;
-            overlay.style.display = 'block';
-
-            // محاولة تفعيل ملء الشاشة تلقائياً
-            makeLandscape();
-        }
-
-        function makeLandscape() {
-            let overlay = document.getElementById('player-overlay');
-            
-            // طلب ملء الشاشة من المتصفح
-            if (overlay.requestFullscreen) {
-                overlay.requestFullscreen().catch(()=>{});
-            } else if (overlay.webkitRequestFullscreen) {
-                overlay.webkitRequestFullscreen().catch(()=>{});
-            }
-
-            // قفل الشاشة على الوضع الأفقي
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(() => {});
-            }
-        }
-
-        function closePlayer() {
-            let overlay = document.getElementById('player-overlay');
-            let iframe = document.getElementById('video-iframe');
-            
-            iframe.src = '';
-            overlay.style.display = 'none';
-
-            // الخروج من ملء الشاشة وإلغاء القفل الأفقي
-            if (document.exitFullscreen) {
-                document.exitFullscreen().catch(()=>{});
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen().catch(()=>{});
-            }
-
-            if (screen.orientation && screen.orientation.unlock) {
-                screen.orientation.unlock();
+            if (Hls.isSupported() && url.includes('.m3u8')) {
+                var hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED,function() {
+                    video.play().catch(() => {});
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // لدعم متصفحات السافاري والأجهزة الأخرى
+                video.src = url;
+                video.addEventListener('loadedmetadata',function() {
+                    video.play().catch(() => {});
+                });
+            } else {
+                // للروابط المباشرة العادية
+                video.src = url;
+                video.play().catch(() => {});
             }
         }
 
