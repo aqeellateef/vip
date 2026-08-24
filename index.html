@@ -2,174 +2,179 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة البث المباشر - VIP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ألوان سبورت VIP</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background-color: #0f111a;
+            background-color: #0b0f19;
             color: #fff;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            font-family: sans-serif;
+            padding: 15px;
         }
-        /* شريط علوي أنيق */
-        header {
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00ffcc;
+            font-size: 20px;
+        }
+        .channels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .channel-card {
             background: #161b22;
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px: solid #30363d;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
         }
-        header h2 { font-size: 18px; color: #00ffcc; }
-        
-        /* تخطيط الشاشة الرئيسية */
-        .main-container {
-            display: flex;
-            flex: 1;
-            height: calc(100vh - 55px);
-            overflow: hidden;
+        .channel-card:active {
+            background: #00ffcc22;
+            border-color: #00ffcc;
         }
-        @media (max-width: 768px) {
-            .main-container { flex-direction: column; }
+        .channel-name {
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .channel-badge {
+            font-size: 11px;
+            color: #ff4757;
         }
 
-        /* حاوية المشغل */
-        .player-container {
-            flex: 3;
+        /* مشغل ملء الشاشة الحقيقي */
+        #player-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
             background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
+            z-index: 99999;
         }
-        .player-container iframe {
+        #video-iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
-        .no-channel-selected {
-            color: #8b949e;
-            font-size: 16px;
-            text-align: center;
-        }
-
-        /* قائمة القنوات الجانبية */
-        .channels-sidebar {
-            flex: 1;
-            background: #131722;
-            border-right: 1px solid #30363d;
-            overflow-y: auto;
-            padding: 10px;
-            max-width: 320px;
-        }
-        @media (max-width: 768px) {
-            .channels-sidebar { max-width: 100%; flex: 1.5; }
-        }
-        .sidebar-title {
-            font-size: 14px;
-            color: #8b949e;
-            margin-bottom: 10px;
-            padding-right: 5px;
-        }
-        .channel-item {
-            background: #1e222d;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            cursor: pointer;
+        
+        /* أزرار التحكم داخل المشغل */
+        .controls-bar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            left: 10px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            border: 1px solid transparent;
-            transition: 0.2s;
+            z-index: 100000;
+            pointer-events: none;
         }
-        .channel-item:hover {
-            background: #262c3a;
-            border-color: #00ffcc;
-        }
-        .channel-item.active {
-            background: #00ffcc15;
-            border-color: #00ffcc;
-        }
-        .channel-info .name {
-            font-size: 15px;
+        .btn {
+            pointer-events: auto;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            border: 1px solid #00ffcc;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 13px;
             font-weight: bold;
+            cursor: pointer;
         }
-        .badge {
-            background: #ff4757;
-            color: white;
-            font-size: 10px;
-            padding: 3px 6px;
-            border-radius: 4px;
+        .close-btn {
+            border-color: #ff4757;
+            color: #ff4757;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h2>🎬 منصة القنوات الفضائية</h2>
-        <span id="current-playing" style="font-size: 13px; color: #8b949e;">اختر قناة للبدء</span>
-    </header>
+    <h1>قنوات ألوان سبورت VIP</h1>
+    <div class="channels-grid" id="grid">جاري تحميل القنوات...</div>
 
-    <div class="main-container">
-        <!-- قسم المشغل -->
-        <div class="player-container" id="playerBox">
-            <div class="no-channel-selected">قم باختيار قناة من القائمة لجلسة المشاهدة المباشرة 📺</div>
+    <!-- واجهة المشغل بملء الشاشة -->
+    <div id="player-overlay">
+        <div class="controls-bar">
+            <button class="btn close-btn" onclick="closePlayer()">✕ إغلاق</button>
+            <button class="btn" onclick="makeLandscape()">🔄 ملء الشاشة أفقياً</button>
         </div>
-
-        <!-- قائمة القنوات المستدعاة من JSON -->
-        <div class="channels-sidebar">
-            <div class="sidebar-title">قائمة البث المتاح</div>
-            <div id="channelsList">جاري جلب القنوات...</div>
-        </div>
+        <iframe id="video-iframe" src="" allowfullscreen allow="autoplay; fullscreen; picture-in-picture; orientation-lock"></iframe>
     </div>
 
     <script>
-        async function fetchChannels() {
+        async function loadChannels() {
             try {
                 let res = await fetch('channels.json');
-                let data = await res.json();
-                let listContainer = document.getElementById('channelsList');
-                listContainer.innerHTML = '';
-
-                data.forEach((ch, index) => {
-                    let item = document.createElement('div');
-                    item.className = 'channel-item';
-                    item.innerHTML = `
-                        <div class="channel-info">
-                            <div class="name">${ch.name}</div>
-                        </div>
-                        <span class="badge">${ch.badge}</span>
+                let channels = await res.json();
+                let grid = document.getElementById('grid');
+                grid.innerHTML = '';
+                
+                channels.forEach(ch => {
+                    let card = document.createElement('div');
+                    card.className = 'channel-card';
+                    card.innerHTML = `
+                        <div class="channel-name">${ch.name}</div>
+                        <div class="channel-badge">${ch.badge}</div>
                     `;
-                    
-                    item.onclick = () => {
-                        // إزالة التحديد السابق وتفعيل الحالي
-                        document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
-                        item.classList.add('active');
-                        
-                        // تحديث النص العلوي
-                        document.getElementById('current-playing').innerText = "يعمل الآن: " + ch.name;
-                        
-                        // تشغيل القناة داخل المشغل بملء الفراغ
-                        let playerBox = document.getElementById('playerBox');
-                        playerBox.innerHTML = `
-                            <iframe src="${ch.url}" allowfullscreen allow="autoplay; fullscreen; picture-in-picture"></iframe>
-                        `;
-                    };
-
-                    listContainer.appendChild(item);
+                    card.onclick = () => openPlayer(ch.url);
+                    grid.appendChild(card);
                 });
-            } catch (err) {
-                document.getElementById('channelsList').innerHTML = '<div style="color:red; text-align:center;">تعذر تحميل القنوات</div>';
+            } catch (e) {
+                document.getElementById('grid').innerHTML = 'خطأ في تحميل الملف';
             }
         }
 
-        fetchChannels();
+        function openPlayer(url) {
+            let overlay = document.getElementById('player-overlay');
+            let iframe = document.getElementById('video-iframe');
+            
+            iframe.src = url;
+            overlay.style.display = 'block';
+
+            // محاولة تفعيل ملء الشاشة تلقائياً
+            makeLandscape();
+        }
+
+        function makeLandscape() {
+            let overlay = document.getElementById('player-overlay');
+            
+            // طلب ملء الشاشة من المتصفح
+            if (overlay.requestFullscreen) {
+                overlay.requestFullscreen().catch(()=>{});
+            } else if (overlay.webkitRequestFullscreen) {
+                overlay.webkitRequestFullscreen().catch(()=>{});
+            }
+
+            // قفل الشاشة على الوضع الأفقي
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(() => {});
+            }
+        }
+
+        function closePlayer() {
+            let overlay = document.getElementById('player-overlay');
+            let iframe = document.getElementById('video-iframe');
+            
+            iframe.src = '';
+            overlay.style.display = 'none';
+
+            // الخروج من ملء الشاشة وإلغاء القفل الأفقي
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(()=>{});
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen().catch(()=>{});
+            }
+
+            if (screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
+            }
+        }
+
+        loadChannels();
     </script>
 </body>
 </html>
