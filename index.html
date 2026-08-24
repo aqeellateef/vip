@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>منصة ألوان الرياضية | Alwan Sport Channels</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(18, 24, 38, 0.75);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent-gold: #f59e0b;
+            --accent-glow: rgba(245, 158, 11, 0.25);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --btn-tv-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px 10px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 10px;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .apps-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .site-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 10px 20px 20px;
+        }
+
+        .site-header h1 {
+            font-size: 26px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .site-header h1 span {
+            color: var(--accent-gold);
+        }
+
+        .site-header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .app-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .app-icon {
+            width: 75px;
+            height: 75px;
+            border-radius: 16px;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: linear-gradient(135deg, #f59e0b 0%, #1d4ed8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 24px;
+            font-weight: 900;
+        }
+
+        .app-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .app-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .app-title {
+            color: var(--text-main);
+            font-size: 18px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .app-badge {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-gold);
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .app-desc {
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .app-buttons {
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+
+        .btn {
+            width: 100%;
+            border: none;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            background: var(--btn-tv-gradient);
+            color: #0b0f19;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+        }
+
+        .loading {
+            text-align: center;
+            grid-column: span 2;
+            color: var(--text-muted);
+            padding: 40px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="site-header">
+            <h1>قنوات <span>ألوان الرياضية</span></h1>
+            <p>بث مباشر عالي الجودة مستدعاة من قاعدة بيانات خارجية</p>
+        </header>
+
+        <!-- شبكة القنوات التي سيتم تعبئتها تلقائياً برمجياً -->
+        <div class="apps-grid" id="channelsContainer">
+            <div class="loading">جاري تحميل القنوات...</div>
+        </div>
+    </div>
+
+    <script>
+        // ضع هنا رابط ملف الـ JSON الخارجي الخاص بك
+        const jsonUrl = 'channels.json'; 
+
+        fetch(jsonUrl)
+            .then(response => response.json())
+            .then(channels => {
+                const container = document.getElementById('channelsContainer');
+                container.innerHTML = ''; // تفريغ رسالة التحميل
+
+                channels.forEach(channel => {
+                    const card = document.createElement('div');
+                    card.className = 'app-card';
+                    card.innerHTML = `
+                        <div class="app-header">
+                            <div class="app-icon">${channel.code}</div>
+                            <div class="app-info">
+                                <div class="app-title-row">
+                                    <h2 class="app-title">${channel.name}</h2>
+                                    <span class="app-badge">${channel.badge}</span>
+                                </div>
+                                <p class="app-desc">البث المباشر لقناة ${channel.name} بجودة عالية وبدون تقطيع.</p>
+                            </div>
+                        </div>
+                        <div class="app-buttons">
+                            <a href="${channel.url}" target="_blank" class="btn">📺 مشاهدة البث (أفقي)</a>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            })
+            .catch(error => {
+                console.error('خطأ في جلب القنوات:', error);
+                document.getElementById('channelsContainer').innerHTML = '<div class="loading" style="color: #ef4444;">تعذر تحميل القنوات حالياً، يرجى التحقق من الرابط الخارجي.</div>';
+            });
+    </script>
+</body>
+</html>
