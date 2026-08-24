@@ -2,348 +2,521 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>📺 العُبودي TV</title> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#070b14">
+<meta name="color-scheme" content="dark">
+<title>Smart TV - بث مباشر وترفيه</title>
+<meta name="description" content="تطبيق بث مباشر مخصص لشاشات التلفاز مع باقة ترفيه كاملة.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet"> 
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
+<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
+<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 
 <style>
-:root {
-  --primary: #4361ee;
-  --accent: #f72585;
-  --glass-bg: rgba(255, 255, 255, 0.08);
-  --glass-border: rgba(255, 255, 255, 0.15);
-  --blur: blur(16px);
+/* ============================================================
+   1) VARIABLES & RESET (TV Optimized Focus States)
+   ============================================================ */
+:root{
+  --bg:#05080f;
+  --bg-soft:#0b101d;
+  --surface:rgba(255,255,255,.05);
+  --surface-solid:#0f172a;
+  --surface-2:#1e293b;
+  --line:rgba(255,255,255,.1);
+  --line-soft:rgba(255,255,255,.06);
+
+  --primary:#00e5ff;
+  --primary-2:#2563eb;
+  --live:#ff2a4d;
+  --live-2:#ff6b35;
+
+  --text:#f8fafc;
+  --muted:#94a3b8;
+
+  --r-lg:22px;
+  --r-md:14px;
+
+  --shadow:0 20px 50px rgba(0,0,0,.5);
+  --nav-h:70px;
+
+  --plyr-color-main:#00e5ff;
+  --plyr-video-background:#000;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body {
-  font-family: 'Cairo', sans-serif;
-  background: linear-gradient(135deg, #1f1c2c 0%, #928dab 100%);
-  padding: 12px;
-  min-height: 100vh;
-  color: white;
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'Tajawal',sans-serif;height:100vh;overflow:hidden}
+button,input,a{font:inherit}
+button,a{touch-action:manipulation;cursor:pointer}
+a{text-decoration:none;color:inherit}
+img{max-width:100%;display:block}
+
+/* TV Remote Focus Support (Golden Glow & Scaling) */
+button:focus-visible, a:focus-visible, input:focus-visible, 
+.tv-channel-card:focus, .tv-pkg-btn:focus, .server-btn:focus {
+  outline: none !important;
+  border-color: var(--primary) !important;
+  background-color: var(--surface-2) !important;
+  box-shadow: 0 0 0 4px rgba(0,229,255,.35), 0 10px 25px rgba(0,0,0,.6) !important;
+  transform: scale(1.04);
+  z-index: 10;
 }
 
-.glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+.brand-font{font-family:'Cairo',sans-serif}
+
+/* ============================================================
+   2) GLOBAL BACKDROP
+   ============================================================ */
+.app-bg{
+  position:fixed;inset:0;z-index:-1;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(0,229,255,.08), transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(255,42,77,.06), transparent 45%),
+    var(--bg);
 }
 
-.header { text-align: center; padding: 15px; margin-bottom: 12px; }
-.header h1 { font-size: 1.8rem; font-weight: 800; }
-.subtitle { color: rgba(255, 255, 255, 0.8); font-size: 0.85rem; }
-.telegram-link {
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #0088cc;
-  padding: 6px 14px;
-  border-radius: 10px;
-  color: white;
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 600;
+/* ============================================================
+   3) TOP NAVIGATION (TV Header)
+   ============================================================ */
+.top-nav{
+  position:fixed;top:0;left:0;right:0;z-index:500;
+  height:var(--nav-h);
+  display:flex;align-items:center;
+  background:rgba(5,8,15,.95);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--line);
+  padding:0 30px;
+}
+.nav-inner{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+}
+.brand{display:flex;align-items:center;gap:12px;font-weight:900;font-size:1.3rem}
+.brand .brand-mark{
+  width:42px;height:42px;border-radius:12px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));
+  display:grid;place-items:center;color:#05080f;font-size:20px;
+  box-shadow:0 6px 20px rgba(0,229,255,.4);
+}
+.brand span.dim{color:var(--muted);font-weight:600;font-size:.8rem;display:block}
+
+.main-tabs{
+  position:relative;display:flex;gap:4px;
+  background:var(--surface-solid);border:1px solid var(--line);
+  border-radius:999px;padding:5px;
+}
+.main-tab{
+  position:relative;z-index:2;border:0;background:transparent;color:var(--muted);
+  font-weight:800;font-size:.95rem;padding:10px 24px;border-radius:999px;
+  display:flex;align-items:center;gap:8px;transition:all .25s ease;
+}
+.main-tab.active{color:#05080f;background:linear-gradient(135deg,var(--primary),var(--primary-2));box-shadow:0 4px 15px rgba(0,229,255,.3)}
+.nav-live-pulse{
+  width:9px;height:9px;border-radius:50%;background:var(--live);
+  box-shadow:0 0 0 0 rgba(255,42,77,.7);
+  animation:pulseDot 1.8s infinite;
+}
+@keyframes pulseDot{
+  0%{box-shadow:0 0 0 0 rgba(255,42,77,.6)}
+  70%{box-shadow:0 0 0 10px rgba(255,42,77,0)}
+  100%{box-shadow:0 0 0 0 rgba(255,42,77,0)}
 }
 
-.player-section { margin-bottom: 15px; padding: 12px; display: none; }
-.player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-#artplayer-container { width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; }
-.servers-container { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-.server-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: white;
-  padding: 5px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: 'Cairo';
-  font-size: 0.8rem;
-}
-.server-btn.active { background: var(--accent); border-color: var(--accent); }
+/* ============================================================
+   4) APP VIEWS & TV LAYOUT
+   ============================================================ */
+.app-view{display:none;height:calc(100vh - var(--nav-h));padding-top:15px}
+.app-view.active{display:flex;flex-direction:column}
 
-.categories-bar { display: flex; gap: 8px; overflow-x: auto; white-space: nowrap; padding: 8px 4px; margin-bottom: 15px; scrollbar-width: none; }
-.categories-bar::-webkit-scrollbar { display: none; }
-.cat-btn {
-  display: inline-block;
-  flex: 0 0 auto;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-family: 'Cairo';
-  font-weight: 700;
-  font-size: 0.85rem;
+.shell-tv{
+  width:100%;height:100%;max-width:1750px;margin:0 auto;padding:0 25px 20px;
+  display:flex;gap:22px;overflow:hidden;
 }
-.cat-btn.active { background: var(--accent); border-color: var(--accent); }
 
-.channels-section { padding: 12px; min-height: 200px; }
-.channels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-.channel-card {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  padding: 16px 8px;
-  cursor: pointer;
-  text-align: center;
-  font-weight: 700;
+/* ============================================================
+   5) TV LIVE LAYOUT (Sidebar Categories + Main Grid/Player)
+   ============================================================ */
+.tv-sidebar{
+  width:320px;flex:0 0 320px;background:var(--surface-solid);
+  border:1px solid var(--line);border-radius:var(--r-lg);
+  display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow);
 }
-.channel-card.active-stream { background: rgba(247, 37, 133, 0.3); border-color: var(--accent); }
-.close-btn { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.2); color: white; padding: 4px 10px; border-radius: 8px; cursor: pointer; font-family: 'Cairo'; }
-.loading-text { text-align: center; padding: 30px; font-weight: 600; }
+.tv-sidebar-header{
+  padding:18px 20px;font-size:1.1rem;font-weight:900;border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.02);display:flex;align-items:center;gap:10px;
+}
+.tv-sidebar-header i{color:var(--primary)}
+.tv-pkg-list{
+  flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;
+}
+.tv-pkg-list::-webkit-scrollbar{width:6px}
+.tv-pkg-list::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px}
+
+.tv-pkg-btn{
+  width:100%;text-align:right;background:var(--surface);border:1px solid var(--line);
+  color:var(--text);padding:14px 18px;border-radius:var(--r-md);font-weight:800;
+  font-size:.95rem;transition:all .2s ease;display:flex;align-items:center;justify-content:space-between;
+}
+.tv-pkg-btn.active{
+  background:linear-gradient(135deg,rgba(0,229,255,.15),rgba(37,99,235,.15));
+  border-color:var(--primary);color:var(--primary);box-shadow:0 4px 15px rgba(0,229,255,.15);
+}
+
+.tv-main-area{
+  flex:1;display:flex;flex-direction:column;overflow:hidden;gap:15px;
+}
+
+/* Channels Grid Area */
+.tv-channels-container{
+  flex:1;background:var(--surface-solid);border:1px solid var(--line);
+  border-radius:var(--r-lg);padding:20px;overflow-y:auto;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;
+}
+.tv-channels-header{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;
+  padding-bottom:10px;border-bottom:1px solid var(--line);
+}
+.tv-channels-header h2{font-size:1.2rem;font-weight:900;display:flex;align-items:center;gap:10px}
+.tv-channels-header h2::before{content:"";width:5px;height:22px;border-radius:10px;background:var(--primary)}
+
+.tv-channels-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;
+}
+.tv-channel-card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:20px 12px;text-align:center;font-weight:800;font-size:1rem;
+  transition:all .18s ease;position:relative;color:var(--text);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;min-height:95px;
+}
+.tv-channel-card.active-stream{
+  background:rgba(255,42,77,.18);border-color:var(--live);
+}
+.tv-channel-card.active-stream::after{
+  content:"● بث مباشر";position:absolute;top:8px;left:10px;font-size:.65rem;color:var(--live);font-weight:900;
+}
+
+/* TV Player Overlay / Panel */
+.tv-player-panel{
+  background:var(--surface-solid);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:16px;box-shadow:var(--shadow);display:none;flex-direction:column;gap:12px;
+}
+.tv-player-top{display:flex;justify-content:space-between;align-items:center}
+.tv-player-top h3{font-size:1.1rem;font-weight:900;display:flex;align-items:center;gap:8px}
+#artplayer-container{width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}
+
+.tv-servers-bar{display:flex;gap:10px;flex-wrap:wrap}
+.server-btn{
+  background:var(--surface);border:1px solid var(--line);color:#fff;padding:8px 18px;
+  border-radius:10px;font-weight:800;font-size:.85rem;transition:.2s;
+}
+.server-btn.active{background:linear-gradient(135deg,var(--live),var(--live-2));border-color:transparent}
+.close-btn{
+  background:var(--surface);border:1px solid var(--line);color:#fff;padding:8px 16px;
+  border-radius:10px;font-weight:800;font-size:.85rem;transition:.2s;
+}
+
+/* ============================================================
+   6) ENTERTAINMENT SECTION (Maintained & Styled)
+   ============================================================ */
+.ent-shell{padding:20px;overflow-y:auto;height:100%}
+.ent-search-area{position:sticky;top:0;z-index:60;padding-bottom:15px;background:var(--bg)}
+.ent-search-box{
+  height:56px;background:var(--surface-solid);border:1px solid var(--line);border-radius:16px;
+  display:flex;align-items:center;gap:12px;padding:0 18px;box-shadow:var(--shadow);
+}
+.ent-search-box input{flex:1;background:transparent;border:0;outline:0;color:#fff;font-size:16px}
+.category-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;padding-top:10px}
+.category-card{
+  min-height:120px;background:var(--surface-solid);border:1px solid var(--line);
+  border-radius:var(--r-lg);padding:18px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;box-shadow:var(--shadow);transition:.2s;
+}
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.media-item{position:relative;overflow:hidden;border-radius:var(--r-md);background:var(--surface-solid);border:1px solid var(--line)}
+.poster-wrap{aspect-ratio:2/3;background:#111;overflow:hidden}
+.media-item img{width:100%;height:100%;object-fit:cover}
+.media-title{padding:10px;font-size:.8rem;font-weight:800;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* General Loaders & States */
+.loader-overlay{
+  position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;
+  flex-direction:column;gap:14px;background:rgba(5,8,15,.88);backdrop-filter:blur(10px);
+}
+.loader-overlay.show{display:flex}
+.spinner{width:50px;height:50px;border-radius:50%;border:4px solid rgba(0,229,255,.2);border-top-color:var(--primary);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.toast{
+  position:fixed;left:50%;bottom:30px;z-index:10000;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  background:var(--surface-solid);color:#fff;border:1px solid var(--line);border-radius:14px;
+  padding:12px 20px;box-shadow:var(--shadow);font-size:14px;font-weight:700;transition:.25s ease;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.empty-state{grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 20px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.empty-state i{font-size:2.5rem;color:var(--primary)}
 </style>
-</head> 
+</head>
+<body>
+<div class="app-bg"></div>
 
-<body> 
-
-<header class="header glass-panel">
-  <h1>العُبودي TV</h1>
-  <div class="subtitle">بث مباشر فائق السرعة ومستقر</div>
-  <a href="https://t.me/stlaet1" class="telegram-link" target="_blank">
-    <span>تابعونا على التلكرام</span>
-  </a>
-</header> 
-
-<section id="player-container" class="player-section glass-panel">
-  <div class="player-header">
-    <h3 id="current-channel-title">اسم القناة</h3>
-    <button class="close-btn" onclick="closePlayer()">✕ إغلاق</button>
+<!-- ===================== TOP NAVIGATION ===================== -->
+<header class="top-nav">
+  <div class="nav-inner">
+    <div class="brand brand-font">
+      <span class="brand-mark"><i class="fa-solid fa-tv"></i></span>
+      <span>Smart TV App<span class="dim">بث مباشر وترفيه تلفزيوني</span></span>
+    </div>
+    <nav class="main-tabs" id="mainTabs" data-active="live">
+      <button class="main-tab active" data-tab="live" onclick="switchMainTab('live')">
+        <span class="nav-live-pulse"></span> البث المباشر
+      </button>
+      <button class="main-tab" data-tab="ent" onclick="switchMainTab('ent')">
+        <i class="fa-solid fa-clapperboard"></i> الترفيه والأفلام
+      </button>
+    </nav>
   </div>
-  <div id="artplayer-container"></div>
-  <div class="servers-container" id="servers-list"></div>
-</section>
+</header>
 
-<div class="categories-bar" id="categories-bar">
-  <div class="loading-text">جاري جلب الباقات...</div>
-</div>
+<!-- ===================== LIVE APP VIEW (TV Layout) ===================== -->
+<main id="app-live" class="app-view active">
+  <div class="shell-tv">
+    
+    <!-- Left Sidebar: Categories -->
+    <div class="tv-sidebar">
+      <div class="tv-sidebar-header">
+        <i class="fa-solid fa-list"></i> الباقات التلفزيونية
+      </div>
+      <div class="tv-pkg-list" id="categories-bar">
+        <button class="tv-pkg-btn" disabled>جاري التحميل...</button>
+      </div>
+    </div>
 
-<section class="channels-section glass-panel">
-  <div class="channels-grid" id="channels">
-    <div class="loading-text" style="grid-column: 1 / -1;">اختر باقة لعرض القنوات</div>
+    <!-- Main Content Area: Player & Channels Grid -->
+    <div class="tv-main-area">
+      
+      <!-- Player Panel (Appears when channel is selected) -->
+      <section id="player-container" class="tv-player-panel">
+        <div class="tv-player-top">
+          <h3 id="current-channel-title"><span class="nav-live-pulse"></span> اختر قناة للمتابعة</h3>
+          <button class="close-btn" onclick="Live.closePlayer()"><i class="fa-solid fa-xmark"></i> إغلاق القناة</button>
+        </div>
+        <div id="artplayer-container"></div>
+        <div class="tv-servers-bar" id="servers-list"></div>
+      </section>
+
+      <!-- Channels Grid -->
+      <section class="tv-channels-container">
+        <div class="tv-channels-header">
+          <h2>قنوات الباقة</h2>
+          <span id="channelsCount" style="color:var(--muted);font-weight:800;font-size:.9rem;">—</span>
+        </div>
+        <div class="tv-channels-grid" id="channels">
+          <div class="empty-state">
+            <i class="fa-solid fa-satellite-dish"></i>
+            <b>اختر باقة من القائمة الجانبية</b>
+            <span>استخدم أزرار الأسهم في الريموت لتحديد الباقة والقناة المناسبة</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
   </div>
-</section>
+</main>
+
+<!-- ===================== ENTERTAINMENT APP VIEW ===================== -->
+<main id="app-ent" class="app-view">
+  <div class="shell-tv" style="flex-direction:column;overflow-y:auto">
+    <div class="ent-search-area">
+      <div class="ent-search-box">
+        <i class="fa-solid fa-magnifying-glass" style="color:var(--primary)"></i>
+        <input id="searchInput" type="search" placeholder="ابحث في الأفلام والمسلسلات...">
+      </div>
+    </div>
+    <div class="category-grid" id="categoryGrid"></div>
+  </div>
+</main>
+
+<div class="loader-overlay" id="loader"><div class="spinner"></div><span style="font-weight:800">جاري التحميل...</span></div>
+<div class="toast" id="toast"></div>
 
 <script>
-const PROXY_WORKER = "https://yacine-proxy.hsinnzaer5.workers.dev";
-let artInstance = null;
-let currentHls = null;
+function toggleLoader(show){
+  document.getElementById('loader').classList.toggle('show', !!show);
+}
+function showToast(message){
+  const el = document.getElementById('toast');
+  el.textContent = message;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+function escapeHtml(str){ return String(str).replace(/[&<>'"]/g, c => ({'&':'&','<':'<','>':'>',"'":''','"':'"'}[c])); }
 
-async function fetchCategories() {
-  const catBar = document.getElementById("categories-bar");
-  try {
-    const res = await fetch(`${PROXY_WORKER}/api/categories`);
-    const data = await res.json();
-    const categories = Array.isArray(data) ? data : (data.categories || data.data || []);
-
-    if (categories.length === 0) throw new Error("لم يتم العثور على باقات");
-
-    catBar.innerHTML = "";
-    categories.forEach((cat, index) => {
-      const btn = document.createElement("button");
-      btn.className = `cat-btn ${index === 0 ? 'active' : ''}`;
-      btn.textContent = cat.name || cat.title || `باقة ${cat.id}`;
-      btn.onclick = () => {
-        document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        fetchChannels(cat.id);
-      };
-      catBar.appendChild(btn);
-    });
-
-    if (categories.length > 0) {
-      fetchChannels(categories[0].id);
-    }
-  } catch (err) {
-    catBar.innerHTML = `<div class="loading-text">⚠️ تعذر تحميل الأقسام: ${err.message}</div>`;
-  }
+let activeMainTab = 'live';
+function switchMainTab(tab){
+  activeMainTab = tab;
+  document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('app-' + tab).classList.add('active');
+  document.querySelectorAll('.main-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  if(tab === 'ent') Live.pause();
 }
 
-async function fetchChannels(categoryId) {
-  const grid = document.getElementById("channels");
-  grid.innerHTML = `<div class="loading-text" style="grid-column: 1 / -1;">جاري جلب قنوات الباقة...</div>`;
+/* ================================================================
+   LIVE MODULE (TV Optimized)
+   ================================================================ */
+const Live = (function(){
+  const PROXY_WORKER = "https://yacine-proxy.hsinnzaer5.workers.dev";
+  let artInstance = null;
+  let currentHls = null;
 
-  try {
-    const res = await fetch(`${PROXY_WORKER}/api/category/${categoryId}`);
-    const data = await res.json();
-    const channels = Array.isArray(data) ? data : (data.channels || data.data || []);
+  async function fetchCategories(){
+    const catBar = document.getElementById("categories-bar");
+    try{
+      const res = await fetch(`${PROXY_WORKER}/api/categories`);
+      const data = await res.json();
+      const categories = Array.isArray(data) ? data : (data.categories || data.data || []);
+      if(!categories.length) throw new Error("لا توجد باقات");
 
-    if (channels.length === 0) {
-      grid.innerHTML = `<div class="loading-text" style="grid-column: 1 / -1;">لا توجد قنوات متاحة في هذه الباقة</div>`;
-      return;
+      catBar.innerHTML = "";
+      categories.forEach((cat, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `tv-pkg-btn ${idx === 0 ? 'active' : ''}`;
+        btn.innerHTML = `<span>${cat.name || cat.title}</span> <i class="fa-solid fa-chevron-left"></i>`;
+        btn.onclick = () => {
+          document.querySelectorAll(".tv-pkg-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          fetchChannels(cat.id);
+        };
+        catBar.appendChild(btn);
+      });
+      if(categories.length > 0) fetchChannels(categories[0].id);
+    }catch(err){
+      catBar.innerHTML = `<button class="tv-pkg-btn" disabled>⚠️ تعذر التحميل</button>`;
     }
-
-    grid.innerHTML = "";
-    channels.forEach(ch => {
-      const card = document.createElement("div");
-      card.className = "channel-card";
-      card.textContent = ch.name || ch.title;
-      card.onclick = () => {
-        document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
-        card.classList.add("active-stream");
-        loadChannel(ch.id, ch.name || ch.title);
-      };
-      grid.appendChild(card);
-    });
-  } catch (err) {
-    grid.innerHTML = `<div class="loading-text" style="grid-column: 1 / -1;">⚠️ تعذر تحميل القنوات: ${err.message}</div>`;
   }
-}
 
-async function loadChannel(channelId, channelName) {
-  const container = document.getElementById("player-container");
-  const title = document.getElementById("current-channel-title");
-  const serversDiv = document.getElementById("servers-list");
+  async function fetchChannels(categoryId){
+    const grid = document.getElementById("channels");
+    const count = document.getElementById("channelsCount");
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-spinner fa-spin"></i><b>جاري تحميل القنوات...</b></div>`;
 
-  container.style.display = "block";
-  title.textContent = `جاري تجهيز سيرفرات: ${channelName}...`;
-  serversDiv.innerHTML = "";
-  container.scrollIntoView({ behavior: "smooth" });
+    try{
+      const res = await fetch(`${PROXY_WORKER}/api/categories/${categoryId}/channels`);
+      const data = await res.json();
+      const channels = Array.isArray(data) ? data : (data.channels || data.data || []);
+      
+      if(!channels.length){
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><b>لا توجد قنوات في هذه الباقة</b></div>`;
+        count.textContent = "0 قناة";
+        return;
+      }
 
-  try {
-    const res = await fetch(`${PROXY_WORKER}/api/channel/${channelId}`);
-    const data = await res.json();
-
-    let streamList = [];
-    if (Array.isArray(data)) {
-      streamList = data;
-    } else if (data.data && Array.isArray(data.data)) {
-      streamList = data.data;
-    } else if (data.url || data.stream_url) {
-      streamList = [{ name: "السيرفر الرئيسي", url: data.url || data.stream_url }];
+      count.textContent = `${channels.length} قناة`;
+      grid.innerHTML = "";
+      channels.forEach(ch => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "tv-channel-card";
+        card.textContent = ch.name || ch.title;
+        card.onclick = () => {
+          document.querySelectorAll(".tv-channel-card").forEach(c => c.classList.remove("active-stream"));
+          card.classList.add("active-stream");
+          loadChannel(ch.id, ch.name || ch.title);
+        };
+        grid.appendChild(card);
+      });
+    }catch(err){
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><b>تعذر جلب القنوات</b></div>`;
     }
-
-    if (streamList.length === 0) throw new Error("السيرفرات غير متوفرة حالياً");
-
-    title.textContent = `🔴 بث مباشر: ${channelName}`;
-
-    let defaultIndex = 0;
-    streamList.forEach((st, idx) => {
-      const name = (st.name || st.quality || '').toLowerCase();
-      if (name.includes('720') || name.includes('sd')) defaultIndex = idx;
-    });
-
-    streamList.forEach((st, idx) => {
-      const targetUrl = st.url || st.stream_url;
-      if (!targetUrl) return;
-
-      const btn = document.createElement("button");
-      btn.className = `server-btn ${idx === defaultIndex ? 'active' : ''}`;
-      btn.textContent = st.name || st.quality || `سيرفر ${idx + 1}`;
-      btn.onclick = () => {
-        document.querySelectorAll(".server-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        startArtPlayer(targetUrl);
-      };
-      serversDiv.appendChild(btn);
-    });
-
-    const firstUrl = streamList[defaultIndex].url || streamList[defaultIndex].stream_url;
-    if (firstUrl) startArtPlayer(firstUrl);
-
-  } catch (err) {
-    title.textContent = `خطأ: ${err.message}`;
-  }
-}
-
-function startArtPlayer(rawUrl) {
-  const proxiedStreamUrl = `${PROXY_WORKER}?stream=${encodeURIComponent(rawUrl)}`;
-
-  if (currentHls) {
-    currentHls.stopLoad();
-    currentHls.detachMedia();
-    currentHls.destroy();
-    currentHls = null;
   }
 
-  if (artInstance) {
-    if (artInstance.video) {
-      artInstance.video.pause();
-      artInstance.video.removeAttribute('src');
-      artInstance.video.load();
+  async function loadChannel(channelId, channelName){
+    const panel = document.getElementById("player-container");
+    const title = document.getElementById("current-channel-title");
+    const serversDiv = document.getElementById("servers-list");
+
+    panel.style.display = "flex";
+    title.innerHTML = `<span class="nav-live-pulse"></span> جاري تجهيز: ${escapeHtml(channelName)}`;
+    serversDiv.innerHTML = "";
+
+    try{
+      const res = await fetch(`${PROXY_WORKER}/api/channel/${channelId}`);
+      const data = await res.json();
+      let streamList = Array.isArray(data) ? data : (data.data || [data]);
+      if(!streamList.length) throw new Error("السيرفر غير متوفر");
+
+      title.innerHTML = `<span class="nav-live-pulse"></span> ${escapeHtml(channelName)}`;
+      serversDiv.innerHTML = "";
+
+      streamList.forEach((st, idx) => {
+        const url = st.url || st.stream_url;
+        if(!url) return;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `server-btn ${idx === 0 ? 'active' : ''}`;
+        btn.textContent = st.name || st.quality || `سيرفر ${idx + 1}`;
+        btn.onclick = () => {
+          document.querySelectorAll(".server-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          startPlayer(url);
+        };
+        serversDiv.appendChild(btn);
+      });
+
+      startPlayer(streamList[0].url || streamList[0].stream_url);
+    }catch(err){
+      showToast(`خطأ في تشغيل القناة`);
     }
-    artInstance.destroy(true);
-    artInstance = null;
   }
 
-  const container = document.getElementById('artplayer-container');
-  container.innerHTML = "";
+  function startPlayer(rawUrl){
+    const proxiedUrl = `${PROXY_WORKER}?stream=${encodeURIComponent(rawUrl)}`;
+    if(currentHls){ currentHls.destroy(); currentHls = null; }
+    if(artInstance){ artInstance.destroy(true); artInstance = null; }
 
-  artInstance = new Artplayer({
-    container: '#artplayer-container',
-    url: proxiedStreamUrl,
-    type: 'm3u8',
-    isLive: true,
-    autoplay: true,
-    fullscreen: true,
-    fullscreenWeb: true,
-    playsInline: true,
-    customType: {
-      m3u8: function (video, url) {
-        if (Hls.isSupported()) {
-          const hls = new Hls({
-            enableWorker: true,
-            lowLatencyMode: false,
-            liveSyncDurationCount: 3,
-            maxBufferLength: 8,
-            maxMaxBufferLength: 16
-          });
+    const container = document.getElementById('artplayer-container');
+    container.innerHTML = "";
 
-          hls.loadSource(url);
-          hls.attachMedia(video);
-          currentHls = hls;
-
-          hls.on(Hls.Events.ERROR, function (event, data) {
-            if (data.fatal) {
-              if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-                hls.startLoad();
-              } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-                hls.recoverMediaError();
-              } else {
-                hls.destroy();
-              }
-            }
-          });
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-          video.src = url;
+    artInstance = new Artplayer({
+      container: '#artplayer-container',
+      url: proxiedUrl,
+      type: 'm3u8',
+      isLive: true,
+      autoplay: true,
+      fullscreen: true,
+      fullscreenWeb: true,
+      customType: {
+        m3u8: function (video, url){
+          if(Hls.isSupported()){
+            const hls = new Hls();
+            hls.loadSource(url);
+            hls.attachMedia(video);
+            currentHls = hls;
+          } else { video.src = url; }
         }
-      },
-    },
-  });
-}
-
-function closePlayer() {
-  if (currentHls) {
-    currentHls.stopLoad();
-    currentHls.detachMedia();
-    currentHls.destroy();
-    currentHls = null;
+      }
+    });
   }
-  if (artInstance) {
-    if (artInstance.video) {
-      artInstance.video.pause();
-      artInstance.video.removeAttribute('src');
-      artInstance.video.load();
-    }
-    artInstance.destroy(true);
-    artInstance = null;
-  }
-  document.getElementById("player-container").style.display = "none";
-  document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
-}
 
-document.addEventListener("DOMContentLoaded", fetchCategories);
+  function closePlayer(){
+    if(currentHls){ currentHls.destroy(); currentHls = null; }
+    if(artInstance){ artInstance.destroy(true); artInstance = null; }
+    document.getElementById("player-container").style.display = "none";
+    document.querySelectorAll(".tv-channel-card").forEach(c => c.classList.remove("active-stream"));
+  }
+
+  function pause(){ try{ if(artInstance?.video) artInstance.video.pause(); }catch(e){} }
+
+  return { fetchCategories, closePlayer, pause };
+})();
+
+document.addEventListener("DOMContentLoaded", () => {
+  Live.fetchCategories();
+});
 </script>
 </body>
 </html>
