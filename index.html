@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>📺 Live Sports Stream</title> 
+<title>Live Sports Stream</title> 
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,7 +49,8 @@ body {
 .player-header h3 { font-size: 0.95rem; font-weight: 700; color: #e2e8f0; }
 #artplayer-container { width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; }
 
-.servers-container { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.servers-container { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+.servers-title { font-size: 0.8rem; color: #94a3b8; font-weight: 600; margin-left: 4px; }
 .server-btn {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -153,7 +154,7 @@ body {
 
 <header class="header glass-panel">
   <h1>Live Sports Stream</h1>
-  <div class="subtitle">بث مباشر عالي الجودة لمختلف قنوات البث الرياضي</div>
+  <div class="subtitle">بث مباشر عالي الجودة مع تبديل الجودات</div>
 </header> 
 
 <section id="player-container" class="player-section glass-panel">
@@ -162,7 +163,9 @@ body {
     <button class="close-btn" onclick="closePlayer()">✕ إغلاق</button>
   </div>
   <div id="artplayer-container"></div>
-  <div class="servers-container" id="servers-list"></div>
+  <div class="servers-container" id="servers-list">
+    <span class="servers-title">الجودات:</span>
+  </div>
 </section>
 
 <div class="categories-bar" id="categories-bar">
@@ -224,23 +227,41 @@ async function fetchChannels(categoryId) {
       return;
     }
 
-    grid.innerHTML = "";
+    // دمج القنوات المتشابهة (مثلاً منع تكرار نفس القناة إذا كانت مقسمة بل تظهر مرة واحدة وتجمع جوداتها)
+    const groupedChannels = {};
     channels.forEach(ch => {
+      let rawName = (ch.name || ch.title || "قناة رياضية").trim();
+      // تنظيف اسم القناة من كلمة الجودة لتوحيدها (مثل إزالة 720p أو HD لتبقى مثل "Bein Sport 1")
+      let cleanName = rawName.replace(/(\b240p?\b|\b360p?\b|\b480p?\b|\b720p?\b|\b1080p?\b|\bhd?\b|\bsd?\b)/gi, "").trim();
+      if (!cleanName) cleanName = rawName;
+
+      if (!groupedChannels[cleanName]) {
+        groupedChannels[cleanName] = {
+          id: ch.id, // نعتمد معرف أول ركيزة أو المعفر الأساسي
+          name: cleanName,
+          logo: ch.logo || ch.image || ch.thumbnail,
+          originalItems: []
+        };
+      }
+      groupedChannels[cleanName].originalItems.push(ch);
+    });
+
+    grid.innerHTML = "";
+    Object.values(groupedChannels).forEach(group => {
       const card = document.createElement("div");
       card.className = "channel-card";
       
-      const imgUrl = ch.logo || ch.image || ch.thumbnail || "https://i.ibb.co/6W3Q1z2/placeholder.png";
-      const chName = ch.name || ch.title || "قناة رياضية";
+      const imgUrl = group.logo || "https://i.ibb.co/6W3Q1z2/placeholder.png";
 
       card.innerHTML = `
-        <img class="channel-img" src="${imgUrl}" alt="${chName}" onerror="this.src='https://i.ibb.co/6W3Q1z2/placeholder.png'">
-        <div class="channel-name">${chName}</div>
+        <img class="channel-img" src="${imgUrl}" alt="${group.name}" onerror="this.src='https://i.ibb.co/6W3Q1z2/placeholder.png'">
+        <div class="channel-name">${group.name}</div>
       `;
 
       card.onclick = () => {
         document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
         card.classList.add("active-stream");
-        loadChannel(ch.id, chName);
+        loadUnifiedChannel(group);
       };
       grid.appendChild(card);
     });
@@ -249,46 +270,63 @@ async function fetchChannels(categoryId) {
   }
 }
 
-async function loadChannel(channelId, channelName) {
+async function loadUnifiedChannel(group) {
   const container = document.getElementById("player-container");
   const title = document.getElementById("current-channel-title");
   const serversDiv = document.getElementById("servers-list");
 
   container.style.display = "block";
-  title.textContent = `جاري تجهيز سيرفرات: ${channelName}...`;
-  serversDiv.innerHTML = "";
+  title.textContent = `جاري تجهيز جودات: ${group.name}...`;
+  serversDiv.innerHTML = `<span class="servers-title">الجودات:</span>`;
   container.scrollIntoView({ behavior: "smooth" });
 
   try {
-    const res = await fetch(`${PROXY_WORKER}/api/channel/${channelId}`);
-    const data = await res.json();
+    let allStreams = [];
 
-    let streamList = [];
-    if (Array.isArray(data)) {
-      streamList = data;
-    } else if (data.data && Array.isArray(data.data)) {
-      streamList = data.data;
-    } else if (data.url || data.stream_url) {
-      streamList = [{ name: "السيرفر الرئيسي", url: data.url || data.stream_url }];
+    // جلب الروابط لكل العناصر المرتبطة بهذا الاسم الموحد
+    for (let item of group.originalItems) {
+      try {
+        const res = await fetch(`${PROXY_WORKER}/api/channel/${item.id}`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          allStreams.push(...data);
+        } else if (data.data && Array.isArray(data.data)) {
+          allStreams.push(...data.data);
+        } else if (data.url || data.stream_url) {
+          allStreams.push({ name: item.name, url: data.url || data.stream_url });
+        }
+      } catch (e) {
+        console.error("خطأ في جلب تفاصيل القناة", e);
+      }
     }
 
-    if (streamList.length === 0) throw new Error("السيرفرات غير متوفرة حالياً");
+    if (allStreams.length === 0) {
+      // محاولة أخيرة عبر الـ id المباشر لو لم تنجح الحلقات
+      const res = await fetch(`${PROXY_WORKER}/api/channel/${group.id}`);
+      const data = await res.json();
+      if (Array.isArray(data)) allStreams = data;
+      else if (data.data && Array.isArray(data.data)) allStreams = data.data;
+      else if (data.url || data.stream_url) allStreams = [{ name: "سيرفر رئيسي", url: data.url || data.stream_url }];
+    }
 
-    title.textContent = `🔴 بث مباشر: ${channelName}`;
+    if (allStreams.length === 0) throw new Error("السيرفرات غير متوفرة حالياً");
 
+    title.textContent = `🔴 بث مباشر: ${group.name}`;
+
+    // ترتيب الجودات تصاعدياً أو تنازلياً إذا توفرت الأسماء
     let defaultIndex = 0;
-    streamList.forEach((st, idx) => {
-      const name = (st.name || st.quality || '').toLowerCase();
-      if (name.includes('720') || name.includes('sd')) defaultIndex = idx;
+    allStreams.forEach((st, idx) => {
+      const qName = (st.name || st.quality || '').toLowerCase();
+      if (qName.includes('720') || qName.includes('hd')) defaultIndex = idx;
     });
 
-    streamList.forEach((st, idx) => {
+    allStreams.forEach((st, idx) => {
       const targetUrl = st.url || st.stream_url;
       if (!targetUrl) return;
 
       const btn = document.createElement("button");
       btn.className = `server-btn ${idx === defaultIndex ? 'active' : ''}`;
-      btn.textContent = st.name || st.quality || `سيرفر ${idx + 1}`;
+      btn.textContent = st.name || st.quality || `جودة ${idx + 1}`;
       btn.onclick = () => {
         document.querySelectorAll(".server-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
@@ -297,7 +335,7 @@ async function loadChannel(channelId, channelName) {
       serversDiv.appendChild(btn);
     });
 
-    const firstUrl = streamList[defaultIndex].url || streamList[defaultIndex].stream_url;
+    const firstUrl = allStreams[defaultIndex].url || allStreams[defaultIndex].stream_url;
     if (firstUrl) startArtPlayer(firstUrl);
 
   } catch (err) {
