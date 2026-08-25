@@ -73,19 +73,40 @@ body {
 .server-btn.active { background: var(--accent); border-color: var(--accent); }
 
 .channels-section { padding: 12px; min-height: 200px; }
-.channels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.channels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
 .channel-card {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
-  padding: 16px 8px;
+  padding: 12px 8px;
   cursor: pointer;
   text-align: center;
   font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.2s ease;
 }
+.channel-card:active { transform: scale(0.96); }
 .channel-card.active-stream { background: rgba(247, 37, 133, 0.3); border-color: var(--accent); }
+
+.channel-img {
+  width: 55px;
+  height: 55px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px;
+}
+
+.channel-name {
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
 .close-btn { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.2); color: white; padding: 4px 10px; border-radius: 8px; cursor: pointer; font-family: 'Cairo'; }
-.loading-text { text-align: center; padding: 30px; font-weight: 600; }
+.loading-text { text-align: center; padding: 30px; font-weight: 600; grid-column: 1 / -1; }
 </style>
 </head> 
 
@@ -93,7 +114,7 @@ body {
 
 <header class="header glass-panel">
   <h1>العُبودي TV - beIN Sports</h1>
-  <div class="subtitle">بث مباشر لقنوات بي إن سبورت فقط</div>
+  <div class="subtitle">جميع قنوات وباقات بي إن سبورت مع الشعارات</div>
   <a href="https://t.me/stlaet1" class="telegram-link" target="_blank">
     <span>تابعونا على التلكرام</span>
   </a>
@@ -110,7 +131,7 @@ body {
 
 <section class="channels-section glass-panel">
   <div class="channels-grid" id="channels">
-    <div class="loading-text" style="grid-column: 1 / -1;">جاري جلب قنوات beIN Sports...</div>
+    <div class="loading-text">جاري جلب جميع أقسام وقنوات beIN Sports...</div>
   </div>
 </section>
 
@@ -119,57 +140,75 @@ const PROXY_WORKER = "https://yacine-proxy.hsinnzaer5.workers.dev";
 let artInstance = null;
 let currentHls = null;
 
-async function fetchBeinChannels() {
+async function fetchAllBeinChannels() {
   const grid = document.getElementById("channels");
   try {
     const res = await fetch(`${PROXY_WORKER}/api/categories`);
     const data = await res.json();
     const categories = Array.isArray(data) ? data : (data.categories || data.data || []);
 
-    if (categories.length === 0) throw new Error("لم يتم العثور على الباقات");
+    if (categories.length === 0) throw new Error("لم يتم العثور على الأقسام");
 
-    // البحث عن الباقة التي تحتوي على اسم bein أو الرياضة
-    let targetCat = categories.find(cat => {
+    // تصفية جميع الأقسام التي تخص beIN أو الرياضة لجلب محتواها مجتمعاً
+    const beinCategories = categories.filter(cat => {
       const name = (cat.name || cat.title || "").toLowerCase();
       return name.includes('bein') || name.includes('رياض') || name.includes('sport');
     });
 
-    // إذا لم يتم العثور عليها بالاسم، نأخذ الباقة الأولى كاحتياط
-    if (!targetCat) {
-      targetCat = categories[0];
+    // لو لم يتم مطابقة أي قسم صراحةً، نأخذ كافة الأقسام المتاحة لضمان عدم ضياع القنوات
+    const targetCats = beinCategories.length > 0 ? beinCategories : categories;
+
+    let allBeinChannels = [];
+
+    for (let cat of targetCats) {
+      try {
+        const catRes = await fetch(`${PROXY_WORKER}/api/category/${cat.id}`);
+        const catData = await catRes.json();
+        let channels = Array.isArray(catData) ? catData : (catData.channels || catData.data || []);
+        
+        // تصفية القنوات التي تحتوي على كلمة bein أو جلبها إذا كنا في قسم مخصص
+        const filtered = channels.filter(ch => {
+          const chName = (ch.name || ch.title || "").toLowerCase();
+          return chName.includes('bein') || targetCats.length === categories.length;
+        });
+
+        allBeinChannels.push(...filtered);
+      } catch (e) {
+        console.error(`خطأ في جلب قسم ${cat.id}`, e);
+      }
     }
 
-    // جلب قنوات هذه الباقة وتصفية قنوات بي إن سبورت فقط
-    const catRes = await fetch(`${PROXY_WORKER}/api/category/${targetCat.id}`);
-    const catData = await catRes.json();
-    let channels = Array.isArray(catData) ? catData : (catData.channels || catData.data || []);
+    // إزالة التكرار بناءً على معرف القناة إن وجد
+    const uniqueChannels = Array.from(new Map(allBeinChannels.map(item => [item.id || item.name, item])).values());
 
-    // تصفية القنوات بحيث تظهر فقط التي تحتوي على كلمة bein
-    channels = channels.filter(ch => {
-      const chName = (ch.name || ch.title || "").toLowerCase();
-      return chName.includes('bein');
-    });
-
-    if (channels.length === 0) {
-      grid.innerHTML = `<div class="loading-text" style="grid-column: 1 / -1;">لا توجد قنوات beIN متاحـة حالياً في هذه الباقة</div>`;
+    if (uniqueChannels.length === 0) {
+      grid.innerHTML = `<div class="loading-text">لا توجد قنوات متاحة حالياً</div>`;
       return;
     }
 
     grid.innerHTML = "";
-    channels.forEach(ch => {
+    uniqueChannels.forEach(ch => {
       const card = document.createElement("div");
       card.className = "channel-card";
-      card.textContent = ch.name || ch.title;
+      
+      const imgUrl = ch.logo || ch.image || ch.thumbnail || "https://i.ibb.co/6W3Q1z2/placeholder.png";
+      const chName = ch.name || ch.title || "قناة بي إن";
+
+      card.innerHTML = `
+        <img class="channel-img" src="${imgUrl}" alt="${chName}" onerror="this.src='https://i.ibb.co/6W3Q1z2/placeholder.png'">
+        <div class="channel-name">${chName}</div>
+      `;
+
       card.onclick = () => {
         document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
         card.classList.add("active-stream");
-        loadChannel(ch.id, ch.name || ch.title);
+        loadChannel(ch.id, chName);
       };
       grid.appendChild(card);
     });
 
   } catch (err) {
-    grid.innerHTML = `<div class="loading-text" style="grid-column: 1 / -1;">⚠️ تعذر تحميل القنوات: ${err.message}</div>`;
+    grid.innerHTML = `<div class="loading-text">⚠️ تعذر تحميل القنوات: ${err.message}</div>`;
   }
 }
 
@@ -315,7 +354,7 @@ function closePlayer() {
   document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
 }
 
-document.addEventListener("DOMContentLoaded", fetchBeinChannels);
+document.addEventListener("DOMContentLoaded", fetchAllBeinChannels);
 </script>
 </body>
 </html>
