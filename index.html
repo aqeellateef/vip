@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>📺 العُبودي TV - beIN Sports</title> 
+<title>📺 Live Sports Stream</title> 
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,20 +14,21 @@
 
 <style>
 :root {
-  --primary: #4361ee;
-  --accent: #f72585;
-  --glass-bg: rgba(255, 255, 255, 0.08);
-  --glass-border: rgba(255, 255, 255, 0.15);
-  --blur: blur(16px);
+  --primary-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --accent: #06b6d4;
+  --accent-glow: rgba(6, 182, 212, 0.4);
+  --glass-bg: rgba(15, 23, 42, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --blur: blur(20px);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
   font-family: 'Cairo', sans-serif;
-  background: linear-gradient(135deg, #1f1c2c 0%, #928dab 100%);
-  padding: 12px;
+  background: var(--primary-gradient);
+  padding: 14px;
   min-height: 100vh;
-  color: white;
+  color: #f8fafc;
 }
 
 .glass-panel {
@@ -35,89 +36,124 @@ body {
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
   border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
-.header { text-align: center; padding: 15px; margin-bottom: 12px; }
-.header h1 { font-size: 1.8rem; font-weight: 800; }
-.subtitle { color: rgba(255, 255, 255, 0.8); font-size: 0.85rem; }
-.telegram-link {
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #0088cc;
+.header { text-align: center; padding: 18px; margin-bottom: 14px; }
+.header h1 { font-size: 1.6rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+.subtitle { color: #94a3b8; font-size: 0.8rem; margin-top: 4px; }
+
+.player-section { margin-bottom: 14px; padding: 14px; display: none; }
+.player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.player-header h3 { font-size: 0.95rem; font-weight: 700; color: #e2e8f0; }
+#artplayer-container { width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; }
+
+.servers-container { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.server-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
   padding: 6px 14px;
   border-radius: 10px;
-  color: white;
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.player-section { margin-bottom: 15px; padding: 12px; display: none; }
-.player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-#artplayer-container { width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; }
-.servers-container { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-.server-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: white;
-  padding: 5px 12px;
-  border-radius: 8px;
   cursor: pointer;
   font-family: 'Cairo';
-  font-size: 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
-.server-btn.active { background: var(--accent); border-color: var(--accent); }
+.server-btn.active { background: var(--accent); border-color: var(--accent); color: #0f172a; box-shadow: 0 0 12px var(--accent-glow); }
 
-.channels-section { padding: 12px; min-height: 200px; }
+.categories-bar { 
+  display: flex; 
+  gap: 8px; 
+  overflow-x: auto; 
+  white-space: nowrap; 
+  padding: 4px 2px 14px 2px; 
+  scrollbar-width: none; 
+}
+.categories-bar::-webkit-scrollbar { display: none; }
+
+.cat-btn {
+  display: inline-block;
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  padding: 8px 18px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-family: 'Cairo';
+  font-weight: 700;
+  font-size: 0.82rem;
+  transition: all 0.2s ease;
+}
+.cat-btn.active { 
+  background: var(--accent); 
+  border-color: var(--accent); 
+  color: #0f172a; 
+  box-shadow: 0 0 15px var(--accent-glow);
+}
+
+.channels-section { padding: 14px; min-height: 220px; }
 .channels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+
 .channel-card {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  padding: 12px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px 8px;
   cursor: pointer;
   text-align: center;
   font-weight: 700;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  transition: transform 0.2s ease;
+  gap: 10px;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 .channel-card:active { transform: scale(0.96); }
-.channel-card.active-stream { background: rgba(247, 37, 133, 0.3); border-color: var(--accent); }
+.channel-card.active-stream { 
+  background: rgba(6, 182, 212, 0.12); 
+  border-color: var(--accent); 
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
+}
 
 .channel-img {
-  width: 55px;
-  height: 55px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 4px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 5px;
 }
 
 .channel-name {
-  font-size: 0.8rem;
-  line-height: 1.2;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: #e2e8f0;
 }
 
-.close-btn { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.2); color: white; padding: 4px 10px; border-radius: 8px; cursor: pointer; font-family: 'Cairo'; }
-.loading-text { text-align: center; padding: 30px; font-weight: 600; grid-column: 1 / -1; }
+.close-btn { 
+  background: rgba(255, 255, 255, 0.08); 
+  border: 1px solid rgba(255, 255, 255, 0.12); 
+  color: #f8fafc; 
+  padding: 4px 12px; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  font-family: 'Cairo'; 
+  font-size: 0.75rem;
+}
+
+.loading-text { text-align: center; padding: 35px; font-weight: 600; color: #94a3b8; grid-column: 1 / -1; font-size: 0.85rem; }
 </style>
 </head> 
 
 <body> 
 
 <header class="header glass-panel">
-  <h1>العُبودي TV - beIN Sports</h1>
-  <div class="subtitle">جميع قنوات وباقات بي إن سبورت مع الشعارات</div>
-  <a href="https://t.me/stlaet1" class="telegram-link" target="_blank">
-    <span>تابعونا على التلكرام</span>
-  </a>
+  <h1>Live Sports Stream</h1>
+  <div class="subtitle">بث مباشر عالي الجودة لمختلف قنوات البث الرياضي</div>
 </header> 
 
 <section id="player-container" class="player-section glass-panel">
@@ -129,9 +165,13 @@ body {
   <div class="servers-container" id="servers-list"></div>
 </section>
 
+<div class="categories-bar" id="categories-bar">
+  <div class="loading-text" style="padding: 10px;">جاري جلب الأقسام...</div>
+</div>
+
 <section class="channels-section glass-panel">
   <div class="channels-grid" id="channels">
-    <div class="loading-text">جاري جلب جميع أقسام وقنوات beIN Sports...</div>
+    <div class="loading-text">اختر قسماً لعرض القنوات المتاحة</div>
   </div>
 </section>
 
@@ -140,59 +180,57 @@ const PROXY_WORKER = "https://yacine-proxy.hsinnzaer5.workers.dev";
 let artInstance = null;
 let currentHls = null;
 
-async function fetchAllBeinChannels() {
-  const grid = document.getElementById("channels");
+async function fetchCategories() {
+  const catBar = document.getElementById("categories-bar");
   try {
     const res = await fetch(`${PROXY_WORKER}/api/categories`);
     const data = await res.json();
     const categories = Array.isArray(data) ? data : (data.categories || data.data || []);
 
-    if (categories.length === 0) throw new Error("لم يتم العثور على الأقسام");
+    if (categories.length === 0) throw new Error("لم يتم العثور على أقسام");
 
-    // تصفية جميع الأقسام التي تخص beIN أو الرياضة لجلب محتواها مجتمعاً
-    const beinCategories = categories.filter(cat => {
-      const name = (cat.name || cat.title || "").toLowerCase();
-      return name.includes('bein') || name.includes('رياض') || name.includes('sport');
+    catBar.innerHTML = "";
+    categories.forEach((cat, index) => {
+      const btn = document.createElement("button");
+      btn.className = `cat-btn ${index === 0 ? 'active' : ''}`;
+      btn.textContent = cat.name || cat.title || `قسم ${cat.id}`;
+      btn.onclick = () => {
+        document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        fetchChannels(cat.id);
+      };
+      catBar.appendChild(btn);
     });
 
-    // لو لم يتم مطابقة أي قسم صراحةً، نأخذ كافة الأقسام المتاحة لضمان عدم ضياع القنوات
-    const targetCats = beinCategories.length > 0 ? beinCategories : categories;
-
-    let allBeinChannels = [];
-
-    for (let cat of targetCats) {
-      try {
-        const catRes = await fetch(`${PROXY_WORKER}/api/category/${cat.id}`);
-        const catData = await catRes.json();
-        let channels = Array.isArray(catData) ? catData : (catData.channels || catData.data || []);
-        
-        // تصفية القنوات التي تحتوي على كلمة bein أو جلبها إذا كنا في قسم مخصص
-        const filtered = channels.filter(ch => {
-          const chName = (ch.name || ch.title || "").toLowerCase();
-          return chName.includes('bein') || targetCats.length === categories.length;
-        });
-
-        allBeinChannels.push(...filtered);
-      } catch (e) {
-        console.error(`خطأ في جلب قسم ${cat.id}`, e);
-      }
+    if (categories.length > 0) {
+      fetchChannels(categories[0].id);
     }
+  } catch (err) {
+    catBar.innerHTML = `<div class="loading-text" style="padding: 10px;">⚠️ تعذر تحميل الأقسام: ${err.message}</div>`;
+  }
+}
 
-    // إزالة التكرار بناءً على معرف القناة إن وجد
-    const uniqueChannels = Array.from(new Map(allBeinChannels.map(item => [item.id || item.name, item])).values());
+async function fetchChannels(categoryId) {
+  const grid = document.getElementById("channels");
+  grid.innerHTML = `<div class="loading-text">جاري جلب قنوات القسم...</div>`;
 
-    if (uniqueChannels.length === 0) {
-      grid.innerHTML = `<div class="loading-text">لا توجد قنوات متاحة حالياً</div>`;
+  try {
+    const res = await fetch(`${PROXY_WORKER}/api/category/${categoryId}`);
+    const data = await res.json();
+    const channels = Array.isArray(data) ? data : (data.channels || data.data || []);
+
+    if (channels.length === 0) {
+      grid.innerHTML = `<div class="loading-text">لا توجد قنوات متاحة في هذا القسم حالياً</div>`;
       return;
     }
 
     grid.innerHTML = "";
-    uniqueChannels.forEach(ch => {
+    channels.forEach(ch => {
       const card = document.createElement("div");
       card.className = "channel-card";
       
       const imgUrl = ch.logo || ch.image || ch.thumbnail || "https://i.ibb.co/6W3Q1z2/placeholder.png";
-      const chName = ch.name || ch.title || "قناة بي إن";
+      const chName = ch.name || ch.title || "قناة رياضية";
 
       card.innerHTML = `
         <img class="channel-img" src="${imgUrl}" alt="${chName}" onerror="this.src='https://i.ibb.co/6W3Q1z2/placeholder.png'">
@@ -206,7 +244,6 @@ async function fetchAllBeinChannels() {
       };
       grid.appendChild(card);
     });
-
   } catch (err) {
     grid.innerHTML = `<div class="loading-text">⚠️ تعذر تحميل القنوات: ${err.message}</div>`;
   }
@@ -354,7 +391,7 @@ function closePlayer() {
   document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
 }
 
-document.addEventListener("DOMContentLoaded", fetchAllBeinChannels);
+document.addEventListener("DOMContentLoaded", fetchCategories);
 </script>
 </body>
 </html>
