@@ -47,7 +47,7 @@
     <video id="my-video" controls autoplay></video>
 
     <div class="controls">
-        <!-- أزرار تجريبية لتشغيل القنوات -->
+        <!-- أزرار تشغيل القنوات -->
         <button onclick="fetchAndPlay('bein1')">تشغيل beIN Sports 1</button>
         <button onclick="fetchAndPlay('bein2')">تشغيل beIN Sports 2</button>
     </div>
@@ -56,14 +56,11 @@
         function fetchAndPlay(streamName) {
             const video = document.getElementById('my-video');
             
-            // ⚠️ ملاحظة هامة: سنضع هنا لاحقاً رابط Cloudflare Worker الذي سننشئه
-            // لأن وضع رابط ياسين مباشرة هنا سيتم حظره بواسطة المتصفح (CORS)
-            const workerUrl = `https://YOUR_WORKER_URL_HERE.workers.dev/?stream=${streamName}`;
+            // استخدام مسار الـ API المباشر على Vercel لجلب البث وتجاوز الحظر
+            const workerUrl = `/api/proxy?stream=${streamName}`;
 
-            alert('جاري جلب البث لقناة: ' + streamName + '\n(يحتاج إلى إعداد الـ Worker ليعمل)');
+            alert('جاري جلب البث لقناة: ' + streamName);
 
-            // كود جلب الرابط وتشغيله (سيتم تفعيله بعد ربط الـ Worker)
-            /*
             fetch(workerUrl)
                 .then(response => response.text())
                 .then(m3u8Link => {
@@ -82,7 +79,6 @@
                     }
                 })
                 .catch(err => console.error('خطأ في جلب البث:', err));
-            */
         }
     </script>
 </body>
