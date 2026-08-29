@@ -97,39 +97,6 @@ body {
   background: #000;
 }
 
-.categories-bar {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  white-space: nowrap;
-  padding: 8px 4px;
-  margin-bottom: 15px;
-  scrollbar-width: none;
-}
-
-.categories-bar::-webkit-scrollbar {
-  display: none;
-}
-
-.cat-btn {
-  display: inline-block;
-  flex: 0 0 auto;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-family: 'Cairo', sans-serif;
-  font-weight: 700;
-  font-size: 0.85rem;
-}
-
-.cat-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
 .channels-section {
   padding: 12px;
 }
@@ -169,13 +136,6 @@ body {
   cursor: pointer;
   font-family: 'Cairo', sans-serif;
 }
-
-.status-msg {
-  text-align: center;
-  padding: 25px;
-  grid-column: 1 / -1;
-  font-size: 0.9rem;
-}
 </style>
 </head> 
 
@@ -197,11 +157,12 @@ body {
   <div id="artplayer-container"></div>
 </section>
 
-<div class="categories-bar" id="categories-bar"></div>
-
 <section class="channels-section glass-panel">
   <div class="channels-grid" id="channels">
-    <div class="status-msg">جاري تحميل الأقسام...</div>
+    <div class="channel-card" onclick="playChannel('https://cdn.elcinema.com/images/tv-live/channels/1.m3u8', 'beIN Sports 1')">beIN Sports 1</div>
+    <div class="channel-card" onclick="playChannel('https://d15j6f776y5wvf.cloudfront.net/v1/manifest.m3u8', 'SSC 1 HD')">SSC 1 HD</div>
+    <div class="channel-card" onclick="playChannel('https://live-hls-web-aje.getaj.net/AJE/index.m3u8', 'الجزيرة الإخبارية')">الجزيرة الإخبارية</div>
+    <div class="channel-card" onclick="playChannel('https://ythls.onrender.com/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ.m3u8', 'قرآن كريم')">إذاعة القران الكريم</div>
   </div>
 </section>
 
@@ -209,107 +170,18 @@ body {
 let artInstance = null;
 let currentHls = null;
 
-// جلب الأقسام عبر مسار عام أو محاكاة الأقسام الأساسية لتجاوز حظر CORS
-async function loadCategories() {
-  const catBar = document.getElementById("categories-bar");
-  const channelsGrid = document.getElementById("channels");
-
-  try {
-    // سنستعمل طلب للبروكسي لجلب البيانات أو الأقسام الرئيسية
-    const res = await fetch(`/api/proxy?action=categories`);
-    
-    // إذا لم يدعم البروكسي جلب الأقسام مباشرة، سنعرض الأقسام الرياضية والعامة الشهيرة مباشرة لتجنب التوقف
-    const categories = [
-      { id: "sports", name: "رياضة" },
-      { id: "beinsports", name: "بين سبورت" },
-      { id: "ssc", name: "SSC السعودية" },
-      { id: "general", name: "قنوات عامة" }
-    ];
-
-    catBar.innerHTML = "";
-    categories.forEach((cat, index) => {
-      const btn = document.createElement("button");
-      btn.className = `cat-btn ${index === 0 ? 'active' : ''}`;
-      btn.textContent = cat.name;
-      btn.onclick = () => {
-        document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        loadChannelsByCategory(cat.id);
-      };
-      catBar.appendChild(btn);
-    });
-
-    loadChannelsByCategory("sports");
-
-  } catch (err) {
-    channelsGrid.innerHTML = `<div class="status-msg">⚠️ تعذر تحميل الأقسام: ${err.message}</div>`;
-  }
-}
-
-async function loadChannelsByCategory(catId) {
-  const channelsGrid = document.getElementById("channels");
-  channelsGrid.innerHTML = `<div class="status-msg">جاري جلب القنوات...</div>`;
-
-  // قائمة القنوات المباشرة الموثوقة التي تعمل عبر الـ Proxy الخاص بك
-  const channelsMap = {
-    "sports": [
-      { name: "beIN Sports 1", id: "bein1" },
-      { name: "beIN Sports 2", id: "bein2" },
-      { name: "beIN Sports 3", id: "bein3" },
-      { name: "SSC 1", id: "ssc1" }
-    ],
-    "beinsports": [
-      { name: "beIN Sports 1", id: "bein1" },
-      { name: "beIN Sports 2", id: "bein2" },
-      { name: "beIN Sports Premium 1", id: "beinpre1" }
-    ],
-    "ssc": [
-      { name: "SSC 1 HD", id: "ssc1" },
-      { name: "SSC 2 HD", id: "ssc2" }
-    ],
-    "general": [
-      { name: "Al Kass 1", id: "alkass1" },
-      { name: "Abu Dhabi Sports 1", id: "ad1" }
-    ]
-  };
-
-  const channels = channelsMap[catId] || channelsMap["sports"];
-  channelsGrid.innerHTML = "";
-
-  channels.forEach(channel => {
-    const card = document.createElement("div");
-    card.className = "channel-card";
-    card.textContent = channel.name;
-    card.onclick = () => {
-      document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
-      card.classList.add("active-stream");
-      playChannel(channel.id, channel.name);
-    };
-    channelsGrid.appendChild(card);
-  });
-}
-
-function playChannel(streamName, channelName) {
+function playChannel(streamUrl, channelName) {
   const container = document.getElementById("player-container");
   const title = document.getElementById("current-channel-title");
 
   container.style.display = "block";
-  title.textContent = `🔴 جاري جلب بث: ${channelName}`;
+  title.textContent = `🔴 بث مباشر: ${channelName}`;
   container.scrollIntoView({ behavior: "smooth" });
 
-  const proxyUrl = `/api/proxy?stream=${streamName}`;
+  document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
+  event.currentTarget.classList.add("active-stream");
 
-  fetch(proxyUrl)
-    .then(res => res.text())
-    .then(streamUrl => {
-      const cleanUrl = streamUrl.trim();
-      title.textContent = `🔴 بث مباشر: ${channelName}`;
-      startArtPlayer(cleanUrl);
-    })
-    .catch(err => {
-      title.textContent = `خطأ في التشغيل`;
-      alert("تعذر جلب رابط البث: " + err);
-    });
+  startArtPlayer(streamUrl);
 }
 
 function startArtPlayer(rawUrl) {
@@ -363,8 +235,6 @@ function closePlayer() {
   document.getElementById("player-container").style.display = "none";
   document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
 }
-
-document.addEventListener("DOMContentLoaded", loadCategories);
 </script>
 </body>
 </html>
