@@ -19,10 +19,12 @@ export default async function handler(req, res) {
     });
 
     const token = await keyResponse.text();
+    
+    // سنستخدم الدومين البديل المباشر أو نعيد التوكن مع رابط السيرفر الحالي
     const finalStreamUrl = `https://live.yacinelive.com/hls/${streamName}/index.m3u8?${token.trim()}`;
 
-    // إعادة توجيه تلقائية لرابط البث النهائي
-    return res.redirect(302, finalStreamUrl);
+    // إرجاع الرابط كالنص ليتامله المشغل في الموقع
+    return res.status(200).send(finalStreamUrl);
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
