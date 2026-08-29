@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet"> 
 
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
 <style>
 :root {
   --primary: #4361ee;
@@ -75,30 +77,23 @@ body {
 
 .player-section {
   margin-bottom: 15px;
-  padding: 15px;
+  padding: 12px;
   display: none;
-  text-align: center;
 }
 
 .player-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
-.external-player-btn {
-  display: inline-block;
-  background: #25D366;
-  background: linear-gradient(135deg, #11998e, #38ef7d);
-  color: white;
-  padding: 12px 24px;
+video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
   border-radius: 12px;
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 1rem;
-  margin-top: 10px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  background: #000;
+  outline: none;
 }
 
 .channels-section {
@@ -158,33 +153,59 @@ body {
     <h3 id="current-channel-title">اسم القناة</h3>
     <button class="close-btn" onclick="closePlayer()">✕ إغلاق</button>
   </div>
-  <p style="margin-bottom: 10px; font-size: 0.85rem; color: #ddd;">اضغط الزر أدناه لفتح البث مباشرة في مشغل الهاتف (VLC أو MX Player) ليعمل بدون تقطيع:</p>
-  <a id="external-link" href="#" class="external-player-btn" target="_blank">📺 تشغيل البث الآن</a>
+  <video id="videoElement" controls autoplay playsinline></video>
 </section>
 
 <section class="channels-section glass-panel">
   <div class="channels-grid" id="channels">
-    <div class="channel-card" onclick="openChannel('https://live-hls-web-aje.getaj.net/AJE/index.m3u8', 'الجزيرة الإخبارية')">الجزيرة الإخبارية</div>
-    <div class="channel-card" onclick="openChannel('https://ythls.onrender.com/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ.m3u8', 'إذاعة القران الكريم')">إذاعة القران الكريم</div>
+    <div class="channel-card" onclick="playChannel('https://imn-live.esite-lab.com/hls/iraqia-sports-1.m3u8', 'العراقية الرياضية')">العراقية الرياضية</div>
+    <div class="channel-card" onclick="playChannel('https://cdn.karwan.tv/gewher-sport/index.m3u8', 'جوهر سبورت')">جوهر سبورت</div>
   </div>
 </section>
 
 <script>
-function openChannel(streamUrl, channelName) {
+let hlsInstance = null;
+
+function playChannel(streamUrl, channelName) {
   const container = document.getElementById("player-container");
   const title = document.getElementById("current-channel-title");
-  const extBtn = document.getElementById("external-link");
+  const video = document.getElementById("videoElement");
 
   container.style.display = "block";
-  title.textContent = `🔴 ${channelName}`;
-  extBtn.href = streamUrl;
+  title.textContent = `🔴 بث مباشر: ${channelName}`;
   container.scrollIntoView({ behavior: "smooth" });
 
   document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
   event.currentTarget.classList.add("active-stream");
+
+  if (hlsInstance) {
+    hlsInstance.destroy();
+  }
+
+  if (Hls.isSupported()) {
+    const hls = new Hls();
+    hls.loadSource(streamUrl);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+      video.play().catch(e => console.log("Autoplay blocked:", e));
+    });
+    hlsInstance = hls;
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = streamUrl;
+    video.addEventListener('loadedmetadata', function() {
+      video.play().catch(e => console.log("Autoplay blocked:", e));
+    });
+  }
 }
 
 function closePlayer() {
+  const video = document.getElementById("videoElement");
+  video.pause();
+  video.src = "";
+  if (hlsInstance) {
+    hlsInstance.destroy();
+    hlsInstance = null;
+  }
   document.getElementById("player-container").style.display = "none";
   document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
 }
