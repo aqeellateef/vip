@@ -9,9 +9,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet"> 
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
-
 <style>
 :root {
   --primary: #4361ee;
@@ -78,23 +75,30 @@ body {
 
 .player-section {
   margin-bottom: 15px;
-  padding: 12px;
+  padding: 15px;
   display: none;
+  text-align: center;
 }
 
 .player-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
-#artplayer-container {
-  width: 100%;
-  aspect-ratio: 16 / 9;
+.external-player-btn {
+  display: inline-block;
+  background: #25D366;
+  background: linear-gradient(135deg, #11998e, #38ef7d);
+  color: white;
+  padding: 12px 24px;
   border-radius: 12px;
-  overflow: hidden;
-  background: #000;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-top: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
 .channels-section {
@@ -154,84 +158,33 @@ body {
     <h3 id="current-channel-title">اسم القناة</h3>
     <button class="close-btn" onclick="closePlayer()">✕ إغلاق</button>
   </div>
-  <div id="artplayer-container"></div>
+  <p style="margin-bottom: 10px; font-size: 0.85rem; color: #ddd;">اضغط الزر أدناه لفتح البث مباشرة في مشغل الهاتف (VLC أو MX Player) ليعمل بدون تقطيع:</p>
+  <a id="external-link" href="#" class="external-player-btn" target="_blank">📺 تشغيل البث الآن</a>
 </section>
 
 <section class="channels-section glass-panel">
   <div class="channels-grid" id="channels">
-    <div class="channel-card" onclick="playChannel('https://cdn.elcinema.com/images/tv-live/channels/1.m3u8', 'beIN Sports 1')">beIN Sports 1</div>
-    <div class="channel-card" onclick="playChannel('https://d15j6f776y5wvf.cloudfront.net/v1/manifest.m3u8', 'SSC 1 HD')">SSC 1 HD</div>
-    <div class="channel-card" onclick="playChannel('https://live-hls-web-aje.getaj.net/AJE/index.m3u8', 'الجزيرة الإخبارية')">الجزيرة الإخبارية</div>
-    <div class="channel-card" onclick="playChannel('https://ythls.onrender.com/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ.m3u8', 'قرآن كريم')">إذاعة القران الكريم</div>
+    <div class="channel-card" onclick="openChannel('https://live-hls-web-aje.getaj.net/AJE/index.m3u8', 'الجزيرة الإخبارية')">الجزيرة الإخبارية</div>
+    <div class="channel-card" onclick="openChannel('https://ythls.onrender.com/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ.m3u8', 'إذاعة القران الكريم')">إذاعة القران الكريم</div>
   </div>
 </section>
 
 <script>
-let artInstance = null;
-let currentHls = null;
-
-function playChannel(streamUrl, channelName) {
+function openChannel(streamUrl, channelName) {
   const container = document.getElementById("player-container");
   const title = document.getElementById("current-channel-title");
+  const extBtn = document.getElementById("external-link");
 
   container.style.display = "block";
-  title.textContent = `🔴 بث مباشر: ${channelName}`;
+  title.textContent = `🔴 ${channelName}`;
+  extBtn.href = streamUrl;
   container.scrollIntoView({ behavior: "smooth" });
 
   document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
   event.currentTarget.classList.add("active-stream");
-
-  startArtPlayer(streamUrl);
-}
-
-function startArtPlayer(rawUrl) {
-  if (currentHls) {
-    currentHls.destroy();
-    currentHls = null;
-  }
-
-  if (artInstance) {
-    artInstance.destroy(true);
-    artInstance = null;
-  }
-
-  const container = document.getElementById('artplayer-container');
-  container.innerHTML = "";
-
-  artInstance = new Artplayer({
-    container: '#artplayer-container',
-    url: rawUrl,
-    type: 'm3u8',
-    isLive: true,
-    autoplay: true,
-    autoMini: true,
-    fullscreen: true,
-    fullscreenWeb: true,
-    playsInline: true,
-    customType: {
-      m3u8: function (video, url) {
-        if (Hls.isSupported()) {
-          const hls = new Hls();
-          hls.loadSource(url);
-          hls.attachMedia(video);
-          currentHls = hls;
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-          video.src = url;
-        }
-      },
-    },
-  });
 }
 
 function closePlayer() {
-  if (currentHls) {
-    currentHls.destroy();
-    currentHls = null;
-  }
-  if (artInstance) {
-    artInstance.destroy(true);
-    artInstance = null;
-  }
   document.getElementById("player-container").style.display = "none";
   document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
 }
