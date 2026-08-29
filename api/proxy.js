@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // السماح بالوصول من أي موقع (CORS)
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
 
@@ -9,18 +8,24 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "الرجاء تحديد اسم القناة مثل ?stream=bein1" });
   }
 
-  const targetUrl = `https://deft.yacinelive.com/api/tw_key?stream_name=${streamName}`;
+  // رابط جلب المفتاح من ياسين
+  const keyUrl = `https://deft.yacinelive.com/api/tw_key?stream_name=${streamName}`;
 
   try {
-    const response = await fetch(targetUrl, {
+    const keyResponse = await fetch(keyUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Linux; Android 10)',
         'Referer': 'https://www.yacinelive.com/'
       }
     });
 
-    const data = await response.text();
-    return res.status(200).send(data);
+    const token = await keyResponse.text();
+
+    // تركيب الرابط النهائي للبث باستخدام التوكن المستلم
+    const finalStreamUrl = `https://live.yacinelive.com/hls/${streamName}/index.m3u8?${token.trim()}`;
+
+    // إرجاع الرابط النهائي مباشرة للموقع
+    return res.status(200).send(finalStreamUrl);
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
