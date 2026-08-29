@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مشغل البث المباشر</title>
-    <!-- استدعاء مكتبة تشغيل البث HLS -->
+    <!-- استدعاء مكتبة HLS -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         body {
@@ -47,38 +47,55 @@
     <video id="my-video" controls autoplay></video>
 
     <div class="controls">
-        <!-- أزرار تشغيل القنوات -->
         <button onclick="fetchAndPlay('bein1')">تشغيل beIN Sports 1</button>
         <button onclick="fetchAndPlay('bein2')">تشغيل beIN Sports 2</button>
     </div>
 
     <script>
+        let hls = null;
+
         function fetchAndPlay(streamName) {
             const video = document.getElementById('my-video');
-            
-            // استخدام مسار الـ API المباشر على Vercel لجلب البث وتجاوز الحظر
             const workerUrl = `/api/proxy?stream=${streamName}`;
 
-            alert('جاري جلب البث لقناة: ' + streamName);
+            alert('جاري تشغيل القناة: ' + streamName);
 
             fetch(workerUrl)
                 .then(response => response.text())
                 .then(m3u8Link => {
+                    const cleanLink = m3u8Link.trim();
+                    
                     if (Hls.isSupported()) {
-                        const hls = new Hls();
-                        hls.loadSource(m3u8Link);
+                        if (hls) {
+                            hls.destroy();
+                        }
+                        
+                        // إعدادات الـ Headers المطلوبة لتشغيل بث ياسين
+                        hls = new Hls({
+                            xhrSetup: function(xhr, url) {
+                                xhr.setRequestHeader('Referer', 'https://www.yacinelive.com/');
+                                xhr.setRequestHeader('User-Agent', 'Mozilla/5.0 (Linux; Android 10)');
+                            }
+                        });
+
+                        hls.loadSource(cleanLink);
                         hls.attachMedia(video);
                         hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                            video.play();
+                            video.play().catch(e => console.log("مفعل التشغيل التلقائي بحاجة لتفاعل:", e));
                         });
+                        
+                        hls.on(Hls.Events.ERROR, function(event, data) {
+                            console.error('HLS Error:', data);
+                        });
+
                     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                        video.src = m3u8Link;
+                        video.src = cleanLink;
                         video.addEventListener('loadedmetadata', function() {
                             video.play();
                         });
                     }
                 })
-                .catch(err => console.error('خطأ في جلب البث:', err));
+                .catch(err => console.error('خطأ في جلب الرابط:', err));
         }
     </script>
 </body>
