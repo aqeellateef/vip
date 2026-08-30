@@ -1,33 +1,27 @@
 export default async function handler(req, res) {
-  const { stream } = req.query;
+  const { channel } = req.query;
 
-  if (!stream) {
-    return res.status(400).send("Stream parameter is missing");
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+
+  if (!channel) {
+    return res.status(400).json({ error: "Channel parameter is missing" });
   }
 
   try {
-    // رابط جلب البث من المصدر الأساسي (أو بناء الرابط حسب معرف القناة)
-    let targetUrl = "";
+    // يمكنك تخصيص مسارات الروابط أو جلبها ديناميكياً هنا
+    let streamUrl = "";
     
-    if (stream === "bein1") {
-      targetUrl = "https://deft.yacinelive.com/api/live/bein1"; // ضع هنا الرابط الحقيقي أو الـ API الخاص بسيرفر ياسين للقناة
+    if (channel === "bein1") {
+      streamUrl = "http://h49.streamorax.buzz/live/918454578001/index.m3u8";
+    } else if (channel === "iraqia") {
+      streamUrl = "https://imn-live.esite-lab.com/hls/iraqia-sports-1.m3u8";
     } else {
-      // كمثال افتراضي لجلب الرابط عبر الـ API العام
-      const response = await fetch(`https://deft.yacinelive.com/api/channels/${stream}`);
-      const data = await response.json();
-      targetUrl = data.url || data.stream_url;
+      streamUrl = "https://cdn.karwan.tv/gewher-sport/index.m3u8";
     }
 
-    if (!targetUrl) {
-      // رابط احتياطي تجريبي للتأكد من عمل المشغل إذا لم يرجع المصدر رابطاً
-      targetUrl = "https://play.gostream.to/hls/live/stream.m3u8";
-    }
-
-    // إرجاع الرابط الحقيقي للمشغل
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    return res.status(200).send(targetUrl);
-
+    return res.status(200).send(streamUrl);
   } catch (error) {
-    return res.status(500).send("Error fetching stream: " + error.message);
+    return res.status(500).json({ error: "Failed to fetch stream URL" });
   }
 }
