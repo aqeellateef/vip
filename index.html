@@ -1,214 +1,110 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>📺 العُبودي TV</title> 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بث مباشر - قنوات VIP</title>
+    <!-- استدعاء مكتبة تشغيل البث HLS.js -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-family: Tahoma, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { margin-bottom: 20px; color: #38bdf8; }
+        .player-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+            aspect-ratio: 16/9;
+        }
+        .channels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        button {
+            background-color: #1e293b;
+            color: #ffffff;
+            border: 2px solid #38bdf8;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #38bdf8;
+            color: #0f172a;
+        }
+    </style>
+</head>
+<body>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet"> 
+    <h1>مشغل القنوات المباشرة</h1>
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- شاشة البث -->
+    <div class="player-container">
+        <video id="video" controls autoplay></video>
+    </div>
 
-<style>
-:root {
-  --primary: #4361ee;
-  --accent: #f72585;
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.15);
-  --blur: blur(16px);
-}
+    <!-- أزرار القنوات -->
+    <div class="channels-grid">
+        <button onclick="playChannel('bein1')">Bein Sport 1</button>
+        <button onclick="playChannel('iraqia')">العراقية الرياضية</button>
+        <button onclick="playChannel('gewher')">جوهر سبورت</button>
+    </div>
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
+    <script>
+        const video = document.getElementById('video');
+        let hls = null;
 
-body {
-  font-family: 'Cairo', sans-serif;
-  background: linear-gradient(135deg, #1f1c2c 0%, #928dab 100%);
-  padding: 12px;
-  min-height: 100vh;
-  color: white;
-}
+        async function playChannel(channelName) {
+            try {
+                // طلب الرابط من سيرفر الـ API الوسيط الخاص بك
+                const response = await fetch(`/api/proxy?channel=${channelName}`);
+                if (!response.ok) throw new Error("فشل جلب رابط القناة");
+                
+                const streamUrl = await response.text();
+                
+                if (Hls.isSupported()) {
+                    if (hls) {
+                        hls.destroy();
+                    }
+                    hls = new Hls();
+                    hls.loadSource(streamUrl);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        video.play();
+                    });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = streamUrl;
+                    video.addEventListener('loadedmetadata', function() {
+                        video.play();
+                    });
+                }
+            } catch (error) {
+                alert("عذراً، حدث خطأ أثناء تشغيل القناة.");
+                console.error(error);
+            }
+        }
+    </script>
 
-.glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-
-.header {
-  text-align: center;
-  padding: 15px;
-  margin-bottom: 12px;
-}
-
-.header h1 {
-  font-size: 1.8rem;
-  font-weight: 800;
-  margin-bottom: 4px;
-}
-
-.subtitle {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.85rem;
-}
-
-.telegram-link {
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #0088cc;
-  padding: 6px 14px;
-  border-radius: 10px;
-  color: white;
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.player-section {
-  margin-bottom: 15px;
-  padding: 12px;
-  display: none;
-}
-
-.player-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-video {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: 12px;
-  background: #000;
-  outline: none;
-}
-
-.channels-section {
-  padding: 12px;
-}
-
-.channels-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
-}
-
-.channel-card {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  padding: 16px 8px;
-  cursor: pointer;
-  text-align: center;
-  font-weight: 700;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 70px;
-}
-
-.channel-card.active-stream {
-  background: rgba(247, 37, 133, 0.3);
-  border-color: var(--accent);
-}
-
-.close-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 4px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: 'Cairo', sans-serif;
-}
-</style>
-</head> 
-
-<body> 
-
-<header class="header glass-panel">
-  <h1>العُبودي TV</h1>
-  <div class="subtitle">بث مباشر فائق السرعة</div>
-  <a href="https://t.me/stlaet1" class="telegram-link" target="_blank">
-    <span>تابعونا على التلكرام</span>
-  </a>
-</header> 
-
-<section id="player-container" class="player-section glass-panel">
-  <div class="player-header">
-    <h3 id="current-channel-title">اسم القناة</h3>
-    <button class="close-btn" onclick="closePlayer()">✕ إغلاق</button>
-  </div>
-  <video id="videoElement" controls autoplay playsinline></video>
-</section>
-
-<section class="channels-section glass-panel">
-  <div class="channels-grid" id="channels">
-    <div class="channel-card" onclick="playChannel('https://imn-live.esite-lab.com/hls/iraqia-sports-1.m3u8', 'العراقية الرياضية')">العراقية الرياضية</div>
-    <div class="channel-card" onclick="playChannel('https://cdn.karwan.tv/gewher-sport/index.m3u8', 'جوهر سبورت')">جوهر سبورت</div>
-  </div>
-</section>
-
-<script>
-let hlsInstance = null;
-
-function playChannel(streamUrl, channelName) {
-  const container = document.getElementById("player-container");
-  const title = document.getElementById("current-channel-title");
-  const video = document.getElementById("videoElement");
-
-  container.style.display = "block";
-  title.textContent = `🔴 بث مباشر: ${channelName}`;
-  container.scrollIntoView({ behavior: "smooth" });
-
-  document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
-  event.currentTarget.classList.add("active-stream");
-
-  if (hlsInstance) {
-    hlsInstance.destroy();
-  }
-
-  if (Hls.isSupported()) {
-    const hls = new Hls();
-    hls.loadSource(streamUrl);
-    hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED, function() {
-      video.play().catch(e => console.log("Autoplay blocked:", e));
-    });
-    hlsInstance = hls;
-  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = streamUrl;
-    video.addEventListener('loadedmetadata', function() {
-      video.play().catch(e => console.log("Autoplay blocked:", e));
-    });
-  }
-}
-
-function closePlayer() {
-  const video = document.getElementById("videoElement");
-  video.pause();
-  video.src = "";
-  if (hlsInstance) {
-    hlsInstance.destroy();
-    hlsInstance = null;
-  }
-  document.getElementById("player-container").style.display = "none";
-  document.querySelectorAll(".channel-card").forEach(c => c.classList.remove("active-stream"));
-}
-</script>
 </body>
 </html>
