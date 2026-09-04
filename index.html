@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ط<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -275,37 +275,6 @@ img{max-width:100%;display:block}
 }
 
 /* ---------- Modals & Embed Frames ---------- */
-.tg-modal-overlay{
-  position:fixed;inset:0;z-index:30000;
-  background:rgba(2,6,23,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  display:flex;align-items:center;justify-content:center;padding:16px;
-  animation:viewFade .3s ease both;
-}
-.tg-modal-box{
-  background:linear-gradient(160deg, #12141c, #090a0f);
-  border:1px solid rgba(23,217,244,.3);
-  border-radius:24px;width:100%;max-width:390px;padding:24px 20px;
-  text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.7);
-}
-.tg-modal-icon{
-  width:64px;height:64px;margin:0 auto 14px;border-radius:20px;
-  background:linear-gradient(135deg, #0088cc, #29b6f6);
-  display:grid;place-items:center;color:#fff;font-size:32px;
-  box-shadow:0 8px 24px rgba(0,136,204,.4);
-}
-.tg-modal-title{font-size:18px;font-weight:900;color:#fff;margin-bottom:6px}
-.tg-modal-desc{font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:20px}
-.tg-modal-actions{display:flex;flex-direction:column;gap:9px}
-.tg-btn-join{
-  height:48px;background:linear-gradient(135deg, #0088cc, #00b0ff);color:#fff;
-  border-radius:14px;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;
-  gap:8px;box-shadow:0 6px 18px rgba(0,136,204,.35);transition:.2s;
-}
-.tg-btn-cancel{
-  height:42px;background:rgba(255,255,255,.05);color:var(--text-faint);border:1px solid var(--line);
-  border-radius:14px;font-weight:700;font-size:13px;transition:.2s;
-}
-
 .iptv-overlay-mask {
   position: fixed;top: 0;left: 0;width: 100%;height: 100%;
   background: rgba(0, 0, 0, 0.82);z-index: 30005;display: none;
@@ -396,21 +365,6 @@ img{max-width:100%;display:block}
   document.addEventListener('copy', event => event.preventDefault());
   document.addEventListener('cut', event => event.preventDefault());
 </script>
-
-<!-- نافذة تليجرام الترحيبية -->
-<div class="tg-modal-overlay" id="tgModal">
-  <div class="tg-modal-box">
-    <div class="tg-modal-icon"><i class="fa-brands fa-telegram"></i></div>
-    <h3 class="tg-modal-title">انضم لقناتنا على تليجرام</h3>
-    <p class="tg-modal-desc">تابع آخر التحديثات والسيرفرات الحصرية أولاً بأول على قناتنا الرسمية <strong>@stlaet1</strong></p>
-    <div class="tg-modal-actions">
-      <a href="https://t.me/stlaet1" target="_blank" rel="noopener" class="tg-btn-join" onclick="closeTgModal()">
-        <i class="fa-brands fa-telegram"></i> انضمام الآن
-      </a>
-      <button type="button" class="tg-btn-cancel" onclick="closeTgModal()">إغلاق</button>
-    </div>
-  </div>
-</div>
 
 <!-- الشريط العلوي -->
 <header class="top-nav">
@@ -590,11 +544,6 @@ let activeMainTab = 'live';
 const MY_TELEGRAM = "https://t.me/stlaet1";
 let iptvModalShown = false;
 
-function closeTgModal(){
-  const m = document.getElementById('tgModal');
-  if(m) m.style.display = 'none';
-}
-
 function closeIptvTg() {
   const modal = document.getElementById('customTgModal');
   if(modal) modal.classList.remove('show');
@@ -637,7 +586,7 @@ function switchMainTab(tab){
 /* ============================================================
    محرك البث المباشر (HLS + DASH + API Worker + ملء الشاشة بالعرض)
    ============================================================ */
-const WORKER_URL = 'https://website.fancy-water-8bf9.workers.dev';
+const WORKER_URL = 'https://icy-truth-98b7.safeer3065.workers.dev';
 const API_BASE = WORKER_URL + '/api/';
 const PROXY_BASE = WORKER_URL + '/?stream=';
 const BATCH_SIZE = 42;
@@ -675,6 +624,7 @@ async function enterFullscreenMode() {
       video.webkitEnterFullscreen();
     }
 
+    // تدوير الشاشة بالعرض للأجهزة التي تدعم Screen Orientation API
     if (screen.orientation && screen.orientation.lock) {
       screen.orientation.lock('landscape').catch(() => {});
     }
@@ -982,7 +932,7 @@ function playDash(url, keys) {
   dashPlayer.on(dashjs.MediaPlayer.events.PLAYBACK_PLAYING, function () {
     loaderOverlay.style.display = 'none';
     updatePlayIcon();
-    enterFullscreenMode();
+    enterFullscreenMode(); // تكبير الشاشة بالعرض تلقائياً
   });
 
   dashPlayer.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, function () {
@@ -1027,7 +977,7 @@ function loadStream(url) {
       qualityBtn.onclick = () => cycleQuality(levels);
       video.muted = false; video.volume = 0.8;
       video.play().then(() => {
-        enterFullscreenMode();
+        enterFullscreenMode(); // تكبير الشاشة بالعرض تلقائياً
       }).catch(() => { 
         video.muted = true; 
         video.play().then(() => {
